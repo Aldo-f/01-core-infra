@@ -130,6 +130,10 @@ else
   log "WARN: geen repos.manifest.jsonc — repo's overgeslagen"
 fi
 
+# --- Zorg dat lokale scripts executable zijn (verse clone heeft geen +x) ---
+chmod +x "$REPO_DIR/install.sh" "$REPO_DIR/backup.sh" "$REPO_DIR/healthcheck.sh" 2>/dev/null || true
+log "Scripts executable gemaakt"
+
 # ============================================================================
 # 3. SYSTEMD UNITS (app- prefix) — via passwordless-sudo helper
 # ============================================================================
