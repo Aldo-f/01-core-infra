@@ -1,0 +1,11 @@
+# 01-core-infra cron jobs — beheerd door install.sh (niet handmatig wijzigen).
+# Pad: /etc/cron.d/01-core-infra
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+HOME=/home/aldo
+
+# Healthcheck elke 15 minuten
+*/15 * * * * aldo /home/aldo/dev/01-core-infra/healthcheck.sh >> /home/aldo/dev/01-core-infra/logs/health-cron.log 2>&1
+
+# Backup dagelijks om 03:00
+0 3 * * * aldo /home/aldo/dev/01-core-infra/backup.sh >> /home/aldo/dev/01-core-infra/logs/backup-cron.log 2>&1

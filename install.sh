@@ -148,6 +148,13 @@ else
   log "Geen systemd templates"
 fi
 
+# --- Cron jobs (backup + healthcheck) via passwordless-sudo helper ---
+if [ -f "$TEMPLATES/cron/01-core-infra.cron" ]; then
+  sudo install -m 0755 "$TEMPLATES/systemd/app-install-cron" /usr/local/bin/app-install-cron
+  sudo /usr/local/bin/app-install-cron
+  log "Cron jobs geïnstalleerd (/etc/cron.d/01-core-infra)"
+fi
+
 # ============================================================================
 # 4. MESH SYNC ENGINE (bun sync)
 # ============================================================================
