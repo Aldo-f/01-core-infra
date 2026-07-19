@@ -1,0 +1,12 @@
+{
+  "name": "llm-infra-sync",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "sync": "bun run src/index.ts"
+  },
+  "dependencies": {
+    "yaml": "^2.4.0"
+  }
+}

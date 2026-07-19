@@ -1,0 +1,27 @@
+# Runtime-directories die door install.sh worden gegenereerd uit templates/
+# Deze zijn GEEN Source of Truth — nooit direct bewerken, dus ook niet committen.
+portainer/
+plex/
+qbittorrent/
+cockpit/
+
+# Netwerkstack runtime (beheerd door install.sh, bron zit in templates/infra/)
+# NB: 04-network-* staan buiten deze repo; hier alleen ter conservatieve dekking
+/04-network-*/
+
+# Logs en tijdelijke bestanden
+logs/
+*.log
+install.log
+
+# Secrets nooit committen
+secrets.json
+*.env
+.env
+.env.*
+!.env.template
+
+# Build artifacts
+node_modules/
+dist/
+bun.lock

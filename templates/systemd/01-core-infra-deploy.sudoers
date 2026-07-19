@@ -1,0 +1,3 @@
+# Passwordless sudo voor de 01-core-infra deploy-helper.
+# Hiermee draait `./install.sh` unattended (systemd enable/start zonder wachtwoord).
+aldo ALL=(root) NOPASSWD: /usr/local/bin/app-deploy-systemd
