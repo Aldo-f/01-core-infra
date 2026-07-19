@@ -1,0 +1,4 @@
+[Unit]
+Description=OpenCode Web
+[Service]
+ExecStart=/bin/true

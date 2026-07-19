@@ -1,0 +1,5 @@
+services:
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    volumes: ['./config:/config', '~/media/movies:/movies']
+    network_mode: host
