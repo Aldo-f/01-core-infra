@@ -78,4 +78,4 @@ at the end of `install.sh`.
 4. [ ] Update Pi-hole blocklists quarterly
 5. [x] Build & verify Mesh Sync Engine — done
 6. [x] Wire up `06-apps-thuis-v4/v5` + `02-ai-freellmapi` via manifest clone — done
-7. [ ] Grant passwordless sudo for deploy commands so `install.sh` runs unattended
+7. [x] Grant passwordless sudo for deploy (app-deploy-systemd + /etc/sudoers.d/01-core-infra-deploy) — done
