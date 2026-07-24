@@ -9,6 +9,16 @@ REAL_HOME="${REAL_HOME:-$HOME}"
 SRC="$REAL_HOME/dev/01-core-infra/templates/cron/01-core-infra.cron"
 DEST="/etc/cron.d/01-core-infra"
 
+# Replace placeholders with actual values
+if [ -f "$SRC" ]; then
+    # Check if __HOME__ placeholder exists
+    if grep -q "__HOME__" "$SRC"; then
+        USER=$(id -un "$SUDO_USER" 2>/dev/null || echo "$USER")
+        CORE_INFRA="$REAL_HOME/dev/01-core-infra"
+        sed -i "s|__HOME__|$USER|g; s|__USER__|\\$USER|g; s|__CORE_INFRA__|$CORE_INFRA|g" "$SRC"
+    fi
+fi
+
 if [ ! -f "$SRC" ]; then
   echo "Geen cron-template op $SRC"
   exit 0

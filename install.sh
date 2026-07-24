@@ -19,7 +19,7 @@ INFRA="$TEMPLATES/infra"
 # only update those rc files, so without this, every run of the script fails
 # to detect them and reinstalls them again. Exporting their known install
 # locations here makes detection work regardless of shell/session. ---
-export PATH="$HOME/.bun/bin:$HOME/fvm/bin:$HOME/.lmstudio/bin:$PATH"
+export PATH="$HOME/.bun/bin:$HOME/fvm/bin:$HOME/.lmstudio/bin:$HOME/.local/bin:$HOME/.opencode/bin:$PATH"
 
 # --- Logging (into logs/, not the repo root) ---
 mkdir -p "$REPO_DIR/logs"
@@ -68,6 +68,10 @@ install_fvm()      { curl -fsSL https://fvm.app/install.sh | bash; }
 install_ollama()   { curl -fsSL https://ollama.com/install.sh | sh; }
 install_lmstudio() { curl -fsSL https://lmstudio.ai/install.sh | bash; }  # installs llmster, LM Studio's headless daemon, managed via the `lms` CLI
 install_fish()     { sudo apt-get update -qq && sudo apt-get install -y fish; }
+install_hermes_workspace() { curl -fsSL https://hermes-workspace.com/install.sh | bash; }  # optional workspace manager (not required for the hermes CLI itself)
+install_hermes()   { curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash -s -- --skip-setup --skip-browser; }  # skip interactive provider wizard + Chromium download
+install_opencode() { curl -fsSL https://opencode.ai/install | bash; }
+install_tree()     { sudo apt-get update -qq && sudo apt-get install -y tree; }
 
 log "=== Phase 0a: base CLI tooling ==="
 ensure_tool "git"         "command -v git"    install_git
@@ -78,6 +82,28 @@ ensure_tool "fvm"         "command -v fvm"    install_fvm
 ensure_tool "ollama"      "command -v ollama" install_ollama
 ensure_tool "LM Studio"   "command -v lms"    install_lmstudio
 ensure_tool "fish"        "command -v fish"   install_fish
+ensure_tool "hermes workspace" "command -v hermes" install_hermes_workspace
+ensure_tool "hermes"      "command -v hermes" install_hermes
+ensure_tool "opencode"    "command -v opencode" install_opencode
+ensure_tool "tree"        "command -v tree"   install_tree
+
+# --- omo (oh-my-openagent): an OpenCode plugin, always invoked via bunx — never installed
+# globally (unsupported upstream), so there's no standalone binary to check with command -v.
+# Provider/model auth is left for you to configure manually (depends on your subscriptions):
+#   bunx oh-my-openagent auth
+OMO_MARKER="$HOME/.config/opencode/.omo-installed-by-01-core-infra"
+if [ -f "$OMO_MARKER" ]; then
+  log "omo (oh-my-openagent) already installed — skipping"
+else
+  log "omo (oh-my-openagent) missing — installing (requires opencode + bun)"
+  if bunx oh-my-openagent install --no-tui --platform=opencode --claude=no --gemini=no --copilot=no; then
+    mkdir -p "$(dirname "$OMO_MARKER")"
+    touch "$OMO_MARKER"
+    log "omo installed successfully"
+  else
+    log "WARN: omo installation appears to have failed — check manually"
+  fi
+fi
 
 # --- fish as the default login shell (separate from ensure_tool: this isn't a plain "present yes/no" check) ---
 fish_is_default_shell() {
