@@ -241,8 +241,15 @@ deploy_repo() {
   git -C "$dst" checkout -q "$ref" 2>/dev/null || log "WARN: checkout $ref voor $name mislukt"
   # infra-bestanden kopieren naar infraSubdir (raakt .git niet)
   local target="$dst/$subdir"
+  local src="$INFRA/$name"
+  # Voorkom dubbele nesting (bv. .../infra/infra/docker-compose.yml): als de
+  # template-map zelf al een submap heeft die overeenkomt met infraSubdir,
+  # kopieer dan die submap i.p.v. de hele template-map erin te nesten.
+  if [ "$subdir" != "." ] && [ -d "$src/$subdir" ]; then
+    src="$src/$subdir"
+  fi
   mkdir -p "$target"
-  cp -rf "$INFRA/$name/." "$target/"
+  cp -rf "$src/." "$target/"
   log "Deployed repo $name (ref=$ref) -> $target"
 }
 
