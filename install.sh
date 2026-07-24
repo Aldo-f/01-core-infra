@@ -19,7 +19,7 @@ INFRA="$TEMPLATES/infra"
 # only update those rc files, so without this, every run of the script fails
 # to detect them and reinstalls them again. Exporting their known install
 # locations here makes detection work regardless of shell/session. ---
-export PATH="$HOME/.bun/bin:$HOME/fvm/bin:$HOME/.lmstudio/bin:$HOME/.local/bin:$HOME/.opencode/bin:$PATH"
+export PATH="$HOME/.bun/bin:$HOME/fvm/bin:$HOME/.lmstudio/bin:$HOME/.local/bin:$HOME/.opencode/bin:$HOME/.cargo/bin:$PATH"
 
 # --- Logging (into logs/, not the repo root) ---
 mkdir -p "$REPO_DIR/logs"
