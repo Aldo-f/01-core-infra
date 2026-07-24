@@ -186,6 +186,47 @@ ensure_ollama_api_key() {
   return 1
 }
 
+# --- Ollama multi-key support: export each key as OLLAMA_API_KEY_1, OLLAMA_API_KEY_2, etc. ---
+ensure_ollama_api_keys() {
+  [ -n "${OLLAMA_API_KEY:-}" ] && return 0
+  [ -f "$OLLAMA_API_KEY_FILE" ] || return 1
+
+  COUNTER=0
+  while IFS= read -r line || [ -n "$line" ]; do
+    key=$(echo "$line" | xargs)
+    [ -z "$key" ] && continue
+    case "$key" in
+      \#*) continue ;;
+      *) COUNTER=$((COUNTER + 1))
+         export "OLLAMA_API_KEY_$COUNTER"="$key"
+         ;;
+    esac
+  done < "$OLLAMA_API_KEY_FILE"
+
+  log "Loaded $(($COUNTER)) OLLAMA API key(s) from $OLLAMA_API_KEY_FILE"
+  return 0
+}
+
+# --- Helper to list loaded Ollama API keys (for user convenience) ---
+ollama-keys() {
+  if [ -f "$OLLAMA_API_KEY_FILE" ]; then
+    echo "Loaded OLLAMA API key(s):"
+    COUNTER=0
+    while IFS= read -r line || [ -n "$line" ]; do
+      key=$(echo "$line" | xargs)
+      [ -z "$key" ] && continue
+      case "$key" in
+        \#*) continue ;;
+        *) COUNTER=$((COUNTER + 1))
+           printf "  %d: %s\n" "$COUNTER" "$key"
+           ;;
+      esac
+    done < "$OLLAMA_API_KEY_FILE"
+  else
+    echo "No ollama API key file found at $OLLAMA_API_KEY_FILE"
+  fi
+}
+
 log "=== Ollama cloud authentication ==="
 if ensure_ollama_api_key; then
   log "OLLAMA_API_KEY found — cloud authentication active"
@@ -194,6 +235,9 @@ else
       "put it in $OLLAMA_API_KEY_FILE (chmod 600), or export OLLAMA_API_KEY in your fish config" \
       "(e.g. 'set -Ux OLLAMA_API_KEY ...'). Without a key, only local models will work."
 fi
+
+# Also load multiple keys if available (non-breaking enhancement)
+ensure_ollama_api_keys || true
 
 # --- Ollama model pull: pick a model based on available RAM ---
 # All qwen3.6 tags are 17GB+ (smallest: 27b-q4_K_M), so none of them fit any
