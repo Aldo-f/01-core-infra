@@ -131,6 +131,43 @@ else
   fi
 fi
 
+# --- Ensure bash config has PATH for curl-installed tools ---
+ensure_bash_path() {
+  local bashrc="$HOME/.bashrc"
+  local path_line='export PATH="$HOME/.bun/bin:$HOME/fvm/bin:$HOME/.lmstudio/bin:$HOME/.local/bin:$HOME/.opencode/bin:$PATH"'
+
+  if [ -f "$bashrc" ]; then
+    if ! grep -q '\.opencode/bin' "$bashrc" 2>/dev/null; then
+      {
+        echo ""
+        echo "# PATH for curl-installed tools (added by 01-core-infra/install.sh)"
+        echo "$path_line"
+      } >> "$bashrc"
+      log "Updated bash config with PATH for curl-installed tools"
+    fi
+  fi
+}
+
+# --- Ensure fish config has PATH for curl-installed tools ---
+ensure_fish_path() {
+  local fish_config="$HOME/.config/fish/config.fish"
+
+  if [ -f "$fish_config" ]; then
+    if ! grep -q '\.opencode/bin' "$fish_config" 2>/dev/null; then
+      {
+        echo ""
+        echo "# PATH for curl-installed tools (added by 01-core-infra/install.sh)"
+        echo "set -Ux PATH \$HOME/.bun/bin \$HOME/fvm/bin \$HOME/.lmstudio/bin \$HOME/.local/bin \$HOME/.opencode/bin \$PATH"
+      } >> "$fish_config"
+      log "Updated fish config with PATH for curl-installed tools"
+    fi
+  fi
+}
+
+log "=== Shell PATH configuration ==="
+ensure_bash_path
+ensure_fish_path
+
 # --- Ollama cloud authentication via API key (headless-friendly, no browser/TTY needed) ---
 # 'ollama signin' is an interactive device-code flow and doesn't work over SSH on a
 # headless Pi5. OLLAMA_API_KEY is picked up automatically by the ollama CLI once it's
