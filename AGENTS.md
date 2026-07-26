@@ -1,81 +1,126 @@
---
-# AGENTS.md
-# Infrastructure Orchestrator Brain
+# AGENTS.md — 01-core-infra
 
-## EXECUTIVE SUMMARY
-Single Source of Truth: `01-core-infra/templates/`. **One way of working** — edit ONLY
-in `templates/`, then run `./install.sh`. Runtime dirs are 1:1 reconstructions and are
-NEVER edited directly. A single `./install.sh` from `01-core-infra/` restores the entire
-`~/dev` tree (pure-infra components + git repos via the manifest).
+## Deployment
 
-Structure: `templates/infra/<component>/` holds the full source for each component.
-`templates/infra/repos.manifest.jsonc` records git-repo identity (remote + checkout ref +
-infra subdir) so app-repos keep their `.git` and are never destroyed.
+```bash
+cd ansible && ansible-playbook -i inventories/local.yml playbooks/site.yml
+```
 
-## WORKFLOW (THE ONLY WAY)
-1. Edit a file under `templates/infra/<component>/`.
-2. Run `./install.sh` (from `01-core-infra/`). It `cp -rf`s pure-infra components to their
-   runtime target, and for manifest repos does `git clone/pull` + `git checkout <ref>` then
-   copies infra into `<repo>/<infraSubdir>/`.
-3. Never touch runtime dirs (`01-core-infra/plex`, `04-network-*`, cloned repos) directly.
+Idempotent. Run after any template change.
 
-## REGISTRY
-| Component            | Template Source                          | Runtime Target                     | Type        |
-|----------------------|------------------------------------------|------------------------------------|-------------|
-| 01-core-portainer    | `templates/infra/01-core-portainer/`     | `~/dev/01-core-infra/portainer`    | pure-infra  |
-| 01-core-plex         | `templates/infra/01-core-plex/`          | `~/dev/01-core-infra/plex`         | pure-infra  |
-| 01-core-qbittorrent  | `templates/infra/01-core-qbittorrent/`   | `~/dev/01-core-infra/qbittorrent`  | pure-infra  |
-| 01-core-cockpit      | `templates/infra/01-core-cockpit/`       | `~/dev/01-core-infra/cockpit`      | pure-infra  |
-| 04-network-traefik   | `templates/infra/04-network-traefik/`    | `~/dev/04-network-traefik`         | pure-infra  |
-| 04-network-pihole    | `templates/infra/04-network-pihole/`     | `~/dev/04-network-pihole`          | pure-infra  |
-| 04-network-wireguard | `templates/infra/04-network-wireguard/`  | `~/dev/04-network-wireguard`       | pure-infra  |
-| 02-ai-llm-infra-sync | `templates/infra/02-ai-llm-infra-sync/`  | `~/dev/02-ai-llm-infra-sync`       | git repo (private) |
-| 06-apps-thuis-v4     | `templates/infra/06-apps-thuis-v4/infra/`| `~/dev/06-apps-thuis-v4/infra`     | git repo (branch v4/main) |
-| 06-apps-thuis-v5     | `templates/infra/06-apps-thuis-v5/infra/`| `~/dev/06-apps-thuis-v5/infra`     | git repo (branch v5/main) |
-| 02-ai-freellmapi     | `templates/infra/02-ai-freellmapi/infra/`| `~/dev/02-ai-freellmapi/infra`     | git repo (branch upstream) |
+## Source of Truth
 
-## REPO MANIFEST (repos.manifest.jsonc)
-Declarative repo identity consumed by `install.sh`:
-- `02-ai-llm-infra-sync` → `git@github.com:Aldo-f/02-ai-llm-infra-sync.git` @ main (private)
-- `06-apps-thuis-v4` → `git@github.com:Aldo-f/thuis.git` @ v4/main
-- `06-apps-thuis-v5` → `git@github.com:Aldo-f/thuis.git` @ v5/main
-- `02-ai-freellmapi` → `git@github.com:Aldo-f/freellmapi.git` @ upstream
-App-repos: only `<repo>/infra/` is overwritten; `.git` and source stay intact.
+```
+~/dev/01-core-infra/
+  templates/infra/<component>/   ← EDIT HERE
+  ansible/                       ← Deployment automation
+  plex/ portainer/ qbittorrent/  ← NEVER TOUCH (generated)
+```
 
-## MESH SYNC ENGINE
-`02-ai-llm-infra-sync` (TypeScript/Bun). Harvests `credential_pool` from
-`~/.hermes/auth.json`, `~/.config/opencode/auth.json`, `02-ai-omniroute/config.yaml`,
-`02-ai-freellm-api/.env`; unifies per-provider via Set dedup; distributes back preserving
-live metadata (no key logging, per-file try/catch, missing files skipped). Runs as `bun sync`
-at the end of `install.sh`.
+## Component Registry
 
-## HEALTH & MAINTENANCE
-- **backup.sh**: daily `tar.gz` of `plex/config`, `portainer/data`, `pihole/etc-pihole` →
-  `backups/` (git-ignored). Retention 7 days. Skips dirs containing secrets. Suggested cron:
-  `0 3 * * * ~/dev/01-core-infra/backup.sh`.
-- **healthcheck.sh**: checks `docker ps` status + `app-*.service` units; exit 1 if any down.
-  Rotates own logs (14d). Suggested cron: `*/15 * * * * ~/dev/01-core-infra/healthcheck.sh`.
-- **install.sh logs**: written to `logs/install-<ts>.log` (git-ignored), not repo-root.
-- **Pi disk hygiene**: backups + logs are git-ignored and rotated; runtime dirs are git-ignored.
+| Component | Template Source | Runtime Target |
+|---|---|---|
+| 01-core-portainer | `templates/infra/01-core-portainer/` | `~/dev/01-core-infra/portainer/` |
+| 01-core-plex | `templates/infra/01-core-plex/` | `~/dev/01-core-infra/plex/` |
+| 01-core-qbittorrent | `templates/infra/01-core-qbittorrent/` | `~/dev/01-core-infra/qbittorrent/` |
+| 01-core-cockpit | `templates/infra/01-core-cockpit/` | `~/dev/01-core-infra/cockpit/` |
+| 04-network-traefik | `templates/infra/04-network-traefik/` | `~/dev/04-network-traefik/` |
+| 04-network-pihole | `templates/infra/04-network-pihole/` | `~/dev/04-network-pihole/` |
+| 04-network-wireguard | `templates/infra/04-network-wireguard/` | `~/dev/04-network-wireguard/` |
+| 02-ai-llm-infra-sync | `templates/infra/02-ai-llm-infra-sync/` | `~/dev/02-ai-llm-infra-sync/` (git repo) |
+| 06-apps-thuis-v4 | `templates/infra/06-apps-thuis-v4/infra/` | `~/dev/06-apps-thuis-v4/infra/` (branch v4/main) |
+| 06-apps-thuis-v5 | `templates/infra/06-apps-thuis-v5/infra/` | `~/dev/06-apps-thuis-v5/infra/` (branch v5/main) |
+| 02-ai-freellmapi | `templates/infra/02-ai-freellmapi/infra/` | `~/dev/02-ai-freellmapi/infra/` (branch upstream) |
 
-## STATE LOG
-- Workflow consolidated to ONE method: edit `templates/infra/<component>/`, run `install.sh`.
-- Stray `<service>.yml` copies removed; runtime dirs hold only what install.sh writes.
-- `templates/docker/` → `templates/infra/<component>/docker-compose.yml`.
-- `repos.manifest.jsonc` added for git-repo identity (clone/checkout/infra-subdir).
-- `02-ai-llm-infra-sync` is now a real private GitHub repo (`git@github.com:Aldo-f/02-ai-llm-infra-sync.git`,
-  branch main). Local commit + push done, `install.sh` clones/checks it out via the manifest.
-- `06-apps-thuis-v4` (v4/main), `06-apps-thuis-v5` (v5/main), `02-ai-freellmapi` (upstream)
-  are cloned + checked out via `repos.manifest.jsonc`; only their `infra/` subdir is overwritten.
-- `backup.sh` + `healthcheck.sh` added.
-- `gh` + `jq` installed (apt) as deploy tooling.
-- systemd units use `app-` prefix.
+**Naming convention determines target:**
+- `01-core-*` → inside this repo (`01-core-infra/<name>/`)
+- `04-network-*` → sibling repo (`~/dev/04-network-<name>/`)
+- `02-*`, `06-*` → own git repos (cloned via manifest, only `infra/` subdir overwritten)
 
-## TODO/BACKLOG
-1. [x] Create `02-ai-llm-infra-sync` repo on GitHub (private) + push — done
-2. [ ] Validate Tomato firmware compatibility with Pi 5
-3. [ ] Reconfigure WireGuard peers for new network IPs
-4. [ ] Update Pi-hole blocklists quarterly
-5. [x] Build & verify Mesh Sync Engine — done
-6. [x] Wire up `06-apps-thuis-v4/v5` + `02-ai-freellmapi` via manifest clone — done
-7. [x] Grant passwordless sudo for deploy (app-deploy-systemd + /etc/sudoers.d/01-core-infra-deploy) — done
+## Repo Manifest
+
+`templates/infra/repos.manifest.jsonc` declares git-repo identity (remote + ref + infraSubdir). Deploy clones/pulls, checkout the ref, and copies only `infra/` — preserving `.git` and app source code.
+
+## Ansible Structure
+
+```
+ansible/
+  ansible.cfg                          ← roles_path, inventory default
+  inventories/local.yml                ← localhost connection
+  playbooks/site.yml                   ← main playbook (roles in order)
+  roles/
+    base/                              ← apt packages, system setup
+    tools/                             ← CLI tools (sentinel-based idempotency)
+    templates/                         ← deploy infra components
+    systemd/                           ← systemd units + sudoers
+    cron/                              ← cron jobs (backup + healthcheck)
+    mesh_sync/                         ← credential sync engine
+  .github/workflows/ci-verification.yml ← CI: yaml lint, syntax check, template integrity
+```
+
+**Role execution order** (defined in `site.yml`): base → tools → templates → systemd → cron → mesh_sync
+
+**Tool sentries** (`roles/tools/defaults/main.yml`): each tool has a `command` check — Ansible skips if present. When adding a new tool, add a sentry entry here first.
+
+## Ollama
+
+- `ollama signin` is interactive — **does not work** over SSH on headless Pi.
+- Use `~/.config/ollama/api_key` (one key per line, `#` comments) or `OLLAMA_API_KEY` env var.
+- Multiple keys loaded as `OLLAMA_API_KEY_1`, `OLLAMA_API_KEY_2`, etc.
+- Model selection automatic by RAM (qwen3:4b for 8GB, qwen3:8b for 16GB, qwen3.6 for 32GB+). Override with `OLLAMA_MODEL`.
+
+## Docker
+
+Uses Compose **v2 plugin** (`docker compose`, not `docker-compose`). All components are single `docker-compose.yml` files.
+
+## Systemd Units
+
+- Templates: `templates/systemd/app-*.service`
+- Currently stubs (`ExecStart=/bin/true`) — **configure before expecting them to run**.
+- Deployed via passwordless-sudo helper (`/usr/local/bin/app-deploy-systemd`).
+- Only `aldo` gets the sudoers grant — agents should not modify sudoers files.
+
+## Cron Templates
+
+- Source: `templates/cron/01-core-infra.cron`
+- Uses **placeholders** (`__HOME__`, `__USER__`, `__CORE_INFRA__`) — never hardcode paths.
+- Pre-commit hook (`.husky/pre-commit`) rejects hardcoded `/home/aldo/dev/01-core-infra` paths.
+
+## Mesh Sync Engine
+
+`02-ai-llm-infra-sync` (TypeScript/Bun). Harvests credential pools, deduplicates per-provider, distributes back. Runs as `bun sync` at deploy end. Manual run: `bun install && bun sync` in `~/dev/02-ai-llm-infra-sync/`.
+
+## Backup & Healthcheck
+
+| Script | What | Frequency | Retention |
+|---|---|---|---|
+| `backup.sh` | `tar.gz` of plex/config, portainer/data, pihole/etc-pihole | Daily 03:00 | 7 days |
+| `healthcheck.sh` | Docker containers + `app-*.service` units | Every 15 min | 14 days |
+
+Both write to `logs/` (git-ignored). Both skip dirs containing secrets.
+
+## CI (GitHub Actions)
+
+`.github/workflows/ci-verification.yml` runs on pushes to `main`/`develop` when Ansible or templates change:
+- YAML lint (`yamllint`)
+- Ansible syntax check (`--syntax-check`)
+- Ansible lint (`ansible-lint`)
+- Template placeholder validation
+- Cron hardcoded path check
+- Role structure validation (all roles have `tasks/main.yml` + `defaults/main.yml`)
+
+## .gitignore
+
+- Runtime dirs (`portainer/`, `plex/`, `qbittorrent/`, `cockpit/`) — generated
+- `logs/`, `*.log`
+- `secrets.json`, `*.env`, `.env.*` (except `.env.template`)
+- `node_modules/`, `dist/`, `/04-network-*/`
+
+## What Not to Do
+
+- **Don't edit runtime dirs** — always edit `templates/infra/<component>/` and deploy.
+- **Don't hardcode paths** in cron templates — use `__HOME__`, `__USER__`, `__CORE_INFRA__`.
+- **Don't modify `/etc/sudoers.d/`** — managed by Ansible/systemd role.
+- **Don't add tools** without adding a sentry in `ansible/roles/tools/defaults/main.yml`.
+- **Don't expect `ollama signin`** to work on headless — use API key file.
