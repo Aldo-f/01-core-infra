@@ -1,19 +1,26 @@
-# Fix: GitHub Actions workflow fails at root npm ci
+# Fix: GitHub Actions workflow fails
 
 ## Status
-status: awaiting-implementation
+status: in-progress
 
-## Problem
-`.github/workflows/deploy-docs.yml` step "Install dependencies (root)" runs `npm ci` at repo root, but there is no `package.json` there. The step fails, the whole workflow dies in ~9s, and no docs get deployed to GitHub Pages.
+## Problems
+1. Root `npm ci` step in workflow fails — **FIXED**
+2. `docs-theme` submodule points to `git@github.com:Aldo-f/docusaurus-theme.git` which **does not exist** (404) — submodule clone fails in CI
 
 ## Fix
-Remove the root `npm ci` step entirely — only the docs directory has a `package.json`.
+
+### Problem 1 (done)
+Remove the root `npm ci` step — `.github/workflows/deploy-docs.yml` fixed.
+
+### Problem 2 (current)
+The `docs-theme` submodule remote doesn't exist on GitHub. Remove the submodule, keep `docs-theme/` as a regular directory. The `docs/package.json` already uses `"file:../docs-theme"` — a local path reference that works without submodules.
 
 ## Expected outcome
-- Workflow runs to completion
+- GitHub Action runs to completion
 - Docusaurus build succeeds
-- Docs are deployed to https://aldo-f.github.io/01-core-infra/
+- Docs deployed to https://aldo-f.github.io/01-core-infra/ returns 200
 
-## Todo
+## Todos
 - [x] 1. Remove "Install dependencies (root)" step from `.github/workflows/deploy-docs.yml`
-- [ ] F1. Push to main, verify workflow runs successfully, check https://aldo-f.github.io/01-core-infra/ returns 200
+- [ ] 2. Remove docs-theme submodule, keep files as regular directory
+- [ ] F1. Commit & push, verify workflow + docs URL return 200
