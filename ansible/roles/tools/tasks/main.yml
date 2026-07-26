@@ -1,0 +1,6 @@
+- name: Make fish the default login shell
+  command: |
+    fish_path=$(command -v fish)
+    grep -qxF "$fish_path" /etc/shells || echo "$fish_path" | sudo tee -a /etc/shells
+    sudo chsh -s "$fish_path" "aldo"
+  when: "'fish' in tools_sentries"

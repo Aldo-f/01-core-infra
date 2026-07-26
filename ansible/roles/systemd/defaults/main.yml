@@ -1,0 +1,13 @@
+systemd_services:
+  - app-freellmapi
+  - app-hermes-gateway-web
+  - app-hermes-web
+  - app-install-cron
+
+sudoers_file: "/etc/sudoers.d/01-core-infra-deploy"
+
+systemd_helper_path: "/usr/local/bin/app-deploy-systemd"
+
+systemd_template_dir: "{{ infra_templates }}/systemd"
+
+sudoers_template: "{{ infra_templates }}/systemd/01-core-infra-deploy.sudoers"

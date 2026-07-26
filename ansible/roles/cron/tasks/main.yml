@@ -1,0 +1,12 @@
+# tasks/main.yml
+- name: Deploy cron helper script
+  copy:
+    src: app-install-cron
+    dest: "{{ cron_helper_path }}"
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Install cron jobs
+  shell: "{{ cron_helper_path }}"
+  become: true

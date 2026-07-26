@@ -1,0 +1,24 @@
+---
+# basics.yml
+- name: Update APT cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Upgrade all packages
+  apt:
+    upgrade: safe
+    cache_valid_time: 3600
+
+- name: Install required system packages
+  apt:
+    name:
+      - curl
+      - wget
+      - gnupg2
+      - ca-certificates
+      - lsb-release
+      - network-manager
+      - udev
+      - raspi-firmware
+    state: present
