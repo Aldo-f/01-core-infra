@@ -21,12 +21,14 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        working-directory: ./docs
-        run: npm ci
+        run: |
+          cd docs
+          npm ci
 
       - name: Build Docusaurus site
-        working-directory: ./docs
-        run: npm run build
+        run: |
+          cd docs
+          npm run build
 
       - name: Set up Git
         run: |
