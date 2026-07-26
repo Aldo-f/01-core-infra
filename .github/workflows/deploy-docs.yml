@@ -21,6 +21,12 @@ jobs:
           cache: 'npm'
           cache-dependency-path: docs/package-lock.json
 
+      - name: Install and build theme
+        run: |
+          cd docs-theme
+          npm ci
+          npm run build
+
       - name: Install dependencies
         run: |
           cd docs
