@@ -20,10 +20,7 @@ jobs:
           node-version: 18.x
           cache: 'npm'
 
-      - name: Install dependencies (root)
-        run: npm ci
-
-      - name: Install dependencies (docs)
+      - name: Install dependencies
         working-directory: ./docs
         run: npm ci
 
