@@ -28,6 +28,11 @@ jobs:
         working-directory: ./docs
         run: npm run build
 
+      - name: Debug: List build directory
+        run: |
+          ls -la ./docs/build
+          echo "---"
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
