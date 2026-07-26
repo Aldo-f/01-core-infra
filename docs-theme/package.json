@@ -1,0 +1,40 @@
+{
+  "name": "@aldo-f/docusaurus-theme",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "publishConfig": { "access": "restricted" },
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/types/index.d.ts",
+  "files": ["dist", "src"],
+  "sideEffects": ["src/css/**/*.css"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Aldo-f/docusaurus-theme.git"
+  },
+  "peerDependencies": {
+    "@docusaurus/core": "^3.10.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "rollup": "^3.0.0",
+    "@rollup/plugin-typescript": "^11.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.0",
+    "@rollup/plugin-commonjs": "^25.0.0",
+    "rollup-plugin-postcss": "^4.0.2",
+    "@types/react": "^19.0.0",
+    "tslib": "^2.6.0",
+    "jest": "^29.0.0",
+    "ts-jest": "^29.0.0",
+    "@types/jest": "^29.0.0",
+    "rimraf": "^5.0.0"
+  },
+  "scripts": {
+    "build": "rimraf dist && rollup -c",
+    "test": "jest",
+    "typecheck": "tsc --noEmit"
+  }
+}
