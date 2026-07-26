@@ -1,4 +1,13 @@
 services:
+  litellm:
+    image: docker.litellm.ai/berriai/litellm:latest
+    ports:
+      - "4000:4000"
+    environment:
+      - OLLAMA_MODEL=qwen3:4b
+    restart: unless-stopped
+    networks:
+      - traefik_net
   freellmapi:
     image: ghcr.io/tashfeenahmed/freellmapi:latest
     build:
