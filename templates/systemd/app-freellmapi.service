@@ -1,0 +1,14 @@
+[Unit]
+Description=FreeLLM API Service
+After=docker.service
+Requires=docker.service
+
+[Service]
+Restart=unless-stopped
+ExecStart=/usr/libexec/docker/cli-plugins/docker-compose -f /home/aldo/dev/02-ai-freellmapi/infra/docker-compose.yml up freellmapi -d
+ExecStop=/usr/libexec/docker/cli-plugins/docker-compose -f /home/aldo/dev/02-ai-freellmapi/infra/docker-compose.yml down
+User=aldo
+Group=aldo
+
+[Install]
+WantedBy=multi-user.target

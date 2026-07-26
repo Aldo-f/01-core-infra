@@ -1,2 +1,27 @@
-# 02-ai-freellmapi infra — beheerd door 01-core-infra install.sh
-# Wijzig ALLEEN via templates/infra/02-ai-freellmapi/infra/
+services:
+  freellmapi:
+    image: ghcr.io/tashfeenahmed/freellmapi:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      HOST_BIND: 0.0.0.0
+    ports:
+      - "3001:3001"
+    volumes:
+      - freellmapi-data:/app/server/data
+      - ./.env.template:/app/server/.env:ro
+    restart: unless-stopped
+    networks:
+      - traefik_net
+
+networks:
+  traefik_net:
+    external: true
+
+volumes:
+  freellmapi-data:

@@ -1,3 +1,23 @@
 services:
   traefik:
-    image: traefik:v3.1
+    image: traefik:v3.3
+    container_name: traefik
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./routes.yml:/etc/traefik/routes.yml:ro
+      - letsencrypt:/letsencrypt
+    networks:
+      - traefik_net
+
+networks:
+  traefik_net:
+    external: true
+
+volumes:
+  letsencrypt:
+    name: 04-network-traefik_letsencrypt
+    external: true

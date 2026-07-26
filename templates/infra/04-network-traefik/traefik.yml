@@ -1,0 +1,17 @@
+entrypoints:
+  web:
+    address: ":80"
+  websecure:
+    address: ":443"
+
+providers:
+  file:
+    filename: /etc/traefik/routes.yml
+
+certificatesResolvers:
+  myresolver:
+    acme:
+      email: "aldof@duckdns.org"
+      storage: /letsencrypt/acme.json
+      httpChallenge:
+        entryPoint: web

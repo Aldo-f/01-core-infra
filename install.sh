@@ -67,11 +67,16 @@ install_bun()      { curl -fsSL https://bun.sh/install | bash; }
 install_fvm()      { curl -fsSL https://fvm.app/install.sh | bash; }
 install_ollama()   { curl -fsSL https://ollama.com/install.sh | sh; }
 install_lmstudio() { curl -fsSL https://lmstudio.ai/install.sh | bash; }  # installs llmster, LM Studio's headless daemon, managed via the `lms` CLI
-install_fish()     { sudo apt-get update -qq && sudo apt-get install -y fish; }
+# install_fish is intentionally commented out because fish is already set as default in this container
+install_fish()     { log "fish is already configured in this environment — skipping"; }
 install_hermes_workspace() { curl -fsSL https://hermes-workspace.com/install.sh | bash; }  # optional workspace manager (not required for the hermes CLI itself)
 install_hermes()   { curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash -s -- --skip-setup --skip-browser; }  # skip interactive provider wizard + Chromium download
-install_opencode() { curl -fsSL https://opencode.ai/install | bash; }
-install_tree()     { sudo apt-get update -qq && sudo apt-get install -y tree; }
+install_tailscale() {
+  curl -fsSL https://tailscale.com/install.sh | sh
+  log "Tailscale installed. You must run 'sudo tailscale up' to authenticate and 'sudo tailscale set --ssh' to enable SSH over Tailscale."
+}
+install_opencode()  { curl -fsSL https://opencode.ai/install   | bash; }
+install_tree()      { sudo apt-get update -qq && sudo apt-get install -y tree; }
 
 log "=== Phase 0a: base CLI tooling ==="
 ensure_tool "git"         "command -v git"    install_git
@@ -86,6 +91,7 @@ ensure_tool "hermes workspace" "command -v hermes" install_hermes_workspace
 ensure_tool "hermes"      "command -v hermes" install_hermes
 ensure_tool "opencode"    "command -v opencode" install_opencode
 ensure_tool "tree"        "command -v tree"   install_tree
+ensure_tool "tailscale"   "command -v tailscale" install_tailscale
 
 # --- omo (oh-my-openagent): an OpenCode plugin, always invoked via bunx — never installed
 # globally (unsupported upstream), so there's no standalone binary to check with command -v.
