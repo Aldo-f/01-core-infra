@@ -4,3 +4,21 @@
     grep -qxF "$fish_path" /etc/shells || echo "$fish_path" | sudo tee -a /etc/shells
     sudo chsh -s "$fish_path" "aldo"
   when: "'fish' in tools_sentries"
+
+- name: Install LM Studio
+  shell: curl -fsSL https://lmstudio.ai/install.sh | bash
+  args:
+    creates: /home/aldo/.lmstudio/bin/lms
+  when: "'lmstudio' in tools_sentries"
+
+- name: Enable LM Studio link
+  command: /home/aldo/.lmstudio/bin/lms link enable
+  become: true
+  become_user: aldo
+  when: "'lmstudio' in tools_sentries"
+
+- name: Start LM Studio daemon
+  command: /home/aldo/.lmstudio/bin/lms daemon up
+  become: true
+  become_user: aldo
+  when: "'lmstudio' in tools_sentries"
