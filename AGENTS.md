@@ -1,5 +1,14 @@
 # AGENTS.md — 01-core-infra
 
+## One-Command Install
+
+```bash
+curl -o- https://raw.githubusercontent.com/Aldo-f/01-core-infra/v0.0.1/install.sh | bash
+```
+
+This command clones the repository at the tagged version and runs the bootstrap installer.
+
+
 ## Deployment
 
 ```bash
@@ -7,6 +16,17 @@ cd ansible && ansible-playbook -i inventories/local.yml playbooks/site.yml
 ```
 
 Idempotent. Run after any template change.
+
+
+## Scripts
+
+| Script | Description |
+|---|---|
+| `install.sh` | Bootstrap installer — clones the repo at a tagged version (validates tag, shallow clone), then execs `scripts/deploy.sh`. |
+| `scripts/deploy.sh` | Full deployment logic (phases 0–4) extracted from the original `install.sh`. |
+
+Both scripts live at the repository root.
+
 
 ## Source of Truth
 

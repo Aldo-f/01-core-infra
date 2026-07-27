@@ -1,131 +1,13 @@
 {
   "schema_version": 2,
-  "active_work_id": "docusaurus-docs-722939d1",
-  "works": {
-    "docusaurus-docs-b0c6534e": {
-      "work_id": "docusaurus-docs-b0c6534e",
-      "active_plan": "/home/aldo/dev/01-core-infra/.omo/plans/docusaurus-docs.md",
-      "plan_name": "docusaurus-docs",
-      "status": "active",
-      "started_at": "2026-07-26T15:53:51.401Z",
-      "updated_at": "2026-07-26T15:53:51.401Z",
-      "session_ids": [
-        "opencode:ses_061170fc0ffestac4we8vy9oZ9"
-      ],
-      "session_origins": {
-        "opencode:ses_061170fc0ffestac4we8vy9oZ9": "direct"
-      },
-      "agent": "atlas",
-      "task_sessions": {}
-    },
-    "docusaurus-docs-722939d1": {
-      "work_id": "docusaurus-docs-722939d1",
-      "active_plan": "/home/aldo/dev/01-core-infra/.omo/plans/docusaurus-docs.md",
-      "plan_name": "docusaurus-docs",
-      "status": "completed",
-      "started_at": "2026-07-26T15:53:51.423Z",
-      "ended_at": "2026-07-26T16:04:10.000Z",
-      "updated_at": "2026-07-26T16:04:10.000Z",
-      "session_ids": [
-        "opencode:ses_061170fc0ffestac4we8vy9oZ9"
-      ],
-      "session_origins": {
-        "opencode:ses_061170fc0ffestac4we8vy9oZ9": "direct"
-      },
-      "agent": "atlas",
-      "task_sessions": {
-        "todo:1": {
-          "task_key": "todo:1",
-          "task_label": "1",
-          "task_title": "Add git submodule: `git submodule add https://github.com/Aldo-f/docusaurus-theme docs`",
-          "session_id": "opencode:ses_060ddf3dbffeisi183MBn1J6qw",
-          "agent": "Sisyphus-Junior",
-          "category": "unspecified-high",
-          "updated_at": "2026-07-26T15:54:15.144Z",
-          "started_at": "2026-07-26T15:54:06.971Z",
-          "status": "completed",
-          "ended_at": "2026-07-26T15:54:15.144Z",
-          "elapsed_ms": 8173
-        },
-        "todo:2": {
-          "task_key": "todo:2",
-          "task_label": "2",
-          "task_title": "Run `npm install` and initialize Docusaurus theme dependencies in `docs/`",
-          "session_id": "opencode:ses_060dd9b08ffeq0CHEtMO60AOHS",
-          "agent": "Sisyphus-Junior",
-          "category": "unspecified-high",
-          "updated_at": "2026-07-26T15:54:50.120Z",
-          "started_at": "2026-07-26T15:54:47.787Z",
-          "status": "completed",
-          "ended_at": "2026-07-26T15:54:50.120Z",
-          "elapsed_ms": 2333
-        },
-        "todo:3": {
-          "task_key": "todo:3",
-          "task_label": "3",
-          "task_title": "Configure `docs/docusaurus.config.ts` with correct `url` (`https://aldo-f.github.io`) and `baseUrl` (`/01-core-infra/`)",
-          "session_id": "opencode:ses_060dd1991ffe2rmm2o1JfS6ZsD",
-          "agent": "Sisyphus-Junior",
-          "category": "unspecified-high",
-          "updated_at": "2026-07-26T16:01:37.740Z",
-          "started_at": "2026-07-26T16:01:11.032Z",
-          "status": "completed",
-          "ended_at": "2026-07-26T16:01:37.740Z",
-          "elapsed_ms": 26708
-        },
-        "todo:4": {
-          "task_key": "todo:4",
-          "task_label": "4",
-          "task_title": "Create `.github/workflows/deploy-docs.yml` using `actions/deploy-pages`",
-          "session_id": "opencode:ses_060d68a11ffeFuLMUBdOSqG475",
-          "agent": "Sisyphus-Junior",
-          "category": "unspecified-high",
-          "updated_at": "2026-07-26T16:02:35.019Z",
-          "started_at": "2026-07-26T16:02:29.782Z",
-          "status": "completed",
-          "ended_at": "2026-07-26T16:02:35.019Z",
-          "elapsed_ms": 5237
-        },
-        "todo:5": {
-          "task_key": "todo:5",
-          "task_label": "5",
-          "task_title": "Set `trailingSlash: true` in `docs/docusaurus.config.ts` for GitHub Pages compatibility",
-          "session_id": "opencode:ses_060d5b92bffem0csu6D7WtMPU7",
-          "agent": "Sisyphus-Junior",
-          "category": "unspecified-high",
-          "updated_at": "2026-07-26T16:03:36.137Z",
-          "started_at": "2026-07-26T16:03:13.082Z",
-          "status": "completed",
-          "ended_at": "2026-07-26T16:03:36.137Z",
-          "elapsed_ms": 23055
-        },
-        "todo:F1": {
-          "task_key": "todo:F1",
-          "task_label": "F1",
-          "task_title": "Run `cd docs && npm run build` locally to verify theme integration and site generation",
-          "session_id": "opencode:ses_060d4ebb3ffeaVwlqLUt27CRVv",
-          "agent": "Sisyphus-Junior",
-          "category": "unspecified-high",
-          "updated_at": "2026-07-26T16:04:10.000Z",
-          "started_at": "2026-07-26T16:03:51.000Z",
-          "status": "completed",
-          "ended_at": "2026-07-26T16:04:10.000Z",
-          "elapsed_ms": 19000
-        }
-      }
-    }
-  },
-  "active_plan": "/home/aldo/dev/01-core-infra/.omo/plans/docusaurus-docs.md",
-  "started_at": "2026-07-26T15:53:51.423Z",
-  "ended_at": "2026-07-26T16:04:10.000Z",
+  "active_work_id": null,
+  "works": {},
+  "active_plan": null,
+  "started_at": "2026-07-27T08:44:00.635Z",
   "status": "completed",
-  "updated_at": "2026-07-26T16:04:10.000Z",
-  "session_ids": [
-    "opencode:ses_061170fc0ffestac4we8vy9oZ9"
-  ],
-  "session_origins": {
-    "opencode:ses_061170fc0ffestac4we8vy9oZ9": "direct"
-  },
-  "plan_name": "docusaurus-docs",
+  "updated_at": "2026-07-27T13:26:00.000Z",
+  "session_ids": [],
+  "session_origins": {},
+  "plan_name": null,
   "agent": "atlas"
 }

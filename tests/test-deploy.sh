@@ -37,7 +37,7 @@ docker run --rm \
   --memory "${MEMORY}" \
   -v "${REPO_ROOT}:/home/aldo/dev/01-core-infra" \
   "${IMAGE}" \
-  bash -c "cd /home/aldo/dev/01-core-infra/ansible && ansible-playbook playbooks/site.yml" \
+  bash -c "cd /home/aldo/dev/01-core-infra/ansible && ansible-playbook -e container_test=true playbooks/site.yml" \
   > "${LOG}" 2>&1
 
 EXIT_CODE=$?

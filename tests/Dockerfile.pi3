@@ -9,6 +9,9 @@ RUN apt-get update && apt-get install -y \
     git \
     curl \
     sudo \
+    unzip \
+    zstd \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 RUN useradd -m -s /bin/bash -u 1000 aldo && \

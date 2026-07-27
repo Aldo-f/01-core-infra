@@ -9,8 +9,9 @@ RUN apt-get update && apt-get install -y \
     git \
     curl \
     sudo \
-    systemd \
-    systemd-sysv \
+    unzip \
+    zstd \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install ansible --break-system-packages

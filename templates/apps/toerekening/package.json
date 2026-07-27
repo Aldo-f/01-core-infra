@@ -1,0 +1,12 @@
+{
+  "name": "toerekening",
+  "version": "1.0.0",
+  "description": "Toerekening app placeholder",
+  "main": "index.js",
+  "scripts": {
+    "build": "echo \"no build steps\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT"
+}
