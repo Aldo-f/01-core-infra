@@ -23,5 +23,3 @@ tools_sentries:
     command: tree -v
   tailscale:
     command: tailscale -v
-  gh:
-    command: gh --version

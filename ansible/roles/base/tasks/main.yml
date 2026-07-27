@@ -1,24 +1,23 @@
 ---
-# basics.yml
-- name: Update APT cache
+- name: Install git
   apt:
-    update_cache: yes
-    cache_valid_time: 3600
-
-- name: Upgrade all packages
-  apt:
-    upgrade: safe
-    cache_valid_time: 3600
-
-- name: Install required system packages
-  apt:
-    name:
-      - curl
-      - wget
-      - gnupg2
-      - ca-certificates
-      - lsb-release
-      - network-manager
-      - udev
-      - raspi-firmware
+    name: git
     state: present
+  when: ansible_facts.packages['git'] is not defined
+
+- name: Install tree
+  apt:
+    name: tree
+    state: present
+  when: ansible_facts.packages['tree'] is not defined
+
+- name: Install Docker
+  shell: curl -fsSL https://get.docker.com | sh
+  args:
+    creates: /usr/bin/docker
+
+- name: Add aldo to docker group
+  user:
+    name: aldo
+    groups: docker
+    append: yes

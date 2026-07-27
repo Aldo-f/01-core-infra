@@ -22,3 +22,61 @@
   become: true
   become_user: aldo
   when: "'lmstudio' in tools_sentries"
+
+- name: Install nodejs
+  shell: curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash - && sudo apt-get install -y nodejs
+  args:
+    creates: /usr/bin/node
+  become: true
+  when: "'node' in tools_sentries"
+
+- name: Install pnpm
+  shell: sudo npm install -g pnpm
+  args:
+    creates: /usr/local/bin/pnpm
+  become: true
+  when: "'pnpm' in tools_sentries"
+
+- name: Install bun
+  shell: curl -fsSL https://bun.sh/install | bash
+  args:
+    creates: /home/aldo/.bun/bin/bun
+  when: "'bun' in tools_sentries"
+
+- name: Install fvm
+  shell: curl -fsSL https://fvm.app/install.sh | bash
+  args:
+    creates: /home/aldo/fvm/bin/fvm
+  when: "'fvm' in tools_sentries"
+
+- name: Install ollama
+  shell: curl -fsSL https://ollama.com/install.sh | sh
+  args:
+    creates: /usr/bin/ollama
+  become: true
+  when: "'ollama' in tools_sentries"
+
+- name: Install hermes
+  shell: curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash -s -- --skip-setup --skip-browser
+  args:
+    creates: /home/aldo/.hermes/bin/hermes
+  when: "'hermes' in tools_sentries"
+
+- name: Install opencode
+  shell: curl -fsSL https://opencode.ai/install | bash
+  args:
+    creates: /home/aldo/.opencode/bin/opencode
+  when: "'opencode' in tools_sentries"
+
+- name: Install tailscale
+  shell: curl -fsSL https://tailscale.com/install.sh | sh
+  args:
+    creates: /usr/bin/tailscale
+  become: true
+  when: "'tailscale' in tools_sentries"
+
+- name: Install OMO (oh-my-openagent)
+  shell: bunx oh-my-openagent install --no-tui --platform=opencode --claude=no --gemini=no --copilot=no && mkdir -p ~/.config/opencode && touch ~/.config/opencode/.omo-installed-by-01-core-infra
+  args:
+    creates: ~/.config/opencode/.omo-installed-by-01-core-infra
+  when: "'opencode' in tools_sentries and 'bun' in tools_sentries"
