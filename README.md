@@ -1,5 +1,6 @@
-# Documentation site (trigger)
-# Trigger workflow attempt 1: Sun 26 Jul 19:17:18 CEST 2026
-# Trigger workflow attempt 2: Sun 26 Jul 19:17:30 CEST 2026
-# Trigger workflow attempt 3: Sun 26 Jul 19:17:42 CEST 2026
-# Last updated: Sun 26 Jul 19:20:48 CEST 2026
+# 01-core-infra
+
+One-command install:
+curl -o- https://raw.githubusercontent.com/Aldo-f/01-core-infra/main/install.sh | bash
+
+For full documentation, see [AGENTS.md](AGENTS.md).

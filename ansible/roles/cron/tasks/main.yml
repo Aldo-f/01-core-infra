@@ -7,6 +7,18 @@
     group: root
     mode: 0755
 
+- name: Copy backup.sh to bin
+  copy:
+    src: "{{ infra_dir }}/backup.sh"
+    dest: "/usr/local/bin/backup.sh"
+    mode: '0755'
+
+- name: Copy healthcheck.sh to bin
+  copy:
+    src: "{{ infra_dir }}/healthcheck.sh"
+    dest: "/usr/local/bin/healthcheck.sh"
+    mode: '0755'
+
 - name: Install cron jobs
   shell: "{{ cron_helper_path }}"
   become: true
