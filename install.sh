@@ -8,11 +8,12 @@ INSTALL_DIR="${INSTALL_DIR:-$HOME/dev/01-core-infra}"
 REPO_URL="${REPO_URL:-https://github.com/Aldo-f/01-core-infra.git}"
 VERSION="${VERSION:-main}"
 
-# Determine where this script lives
-if [ -n "${BASH_SOURCE[0]}" ]; then
-  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Determine where this script lives - defensive approach works when piped
+script_source="${BASH_SOURCE[0]:-}"
+if [ -n "$script_source" ]; then
+  SCRIPT_DIR="$(cd "$(dirname "$script_source")" && pwd)"
 else
-  # Fallback when script is piped into bash (e.g., via curl)
+  # Fallback when script is piped into bash (e.g., via curl/SSH)
   SCRIPT_DIR="$(pwd)"
 fi
 
