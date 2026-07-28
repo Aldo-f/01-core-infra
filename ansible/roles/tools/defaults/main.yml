@@ -3,6 +3,8 @@ tools_sentries:
     command: git --version
   node:
     command: node -v
+  nvm:
+    command: nvm --version
   pnpm:
     command: pnpm -v
   bun:

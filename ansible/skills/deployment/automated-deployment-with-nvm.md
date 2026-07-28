@@ -1,0 +1,1 @@
+---\nname: automated-deployment-with-nvm---\nThis skill includes NVM integration, Ansible deployment, and Docker Compose setup

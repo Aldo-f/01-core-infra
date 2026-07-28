@@ -10,7 +10,7 @@
     infra_templates: "{{ template_dir }}/infra"
     repo_manifest: "{{ infra_templates }}/repos.manifest.jsonc"
     ollama_api_key_file: "/home/aldo/.config/ollama/api_key"
-    container_test: false  # zet op true bij testen in Docker (skips daemon-afhankelijke taken)
+    container_test: false  # zet op true bij testen in Docker (skips daemon-afhankelijke tasks)
 
   pre_tasks:
     - name: Detect system RAM in MB
@@ -32,6 +32,7 @@
           }}
 
   # no roles needed – we inline the required actions
+
   tasks:
     - name: Ensure Toerekening target directory exists
       file:
@@ -51,6 +52,9 @@
         - src: "/home/aldo/dev/01-core-infra/templates/apps/toerekening/docker-compose.yml"
           dest: "/home/aldo/dev/06-apps-toerekening/docker-compose.yml"
           mode: "0644"
+        - src: "/home/aldo/dev/01-core-infra/templates/apps/toerekening/.env"
+          dest: "/home/aldo/dev/06-apps-toerekening/.env"
+          mode: "0644"
         - src: "/home/aldo/dev/01-core-infra/templates/apps/toerekening/package.json"
           dest: "/home/aldo/dev/06-apps-toerekening/package.json"
         - src: "/home/aldo/dev/01-core-infra/templates/apps/toerekening/package-lock.json"
@@ -60,4 +64,3 @@
       command: docker compose -f /home/aldo/dev/06-apps-toerekening/docker-compose.yml up -d
       args:
         chdir: /home/aldo/dev/06-apps-toerekening
-      ignore_errors: yes

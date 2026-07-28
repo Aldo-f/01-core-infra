@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 INSTALL_DIR="${INSTALL_DIR:-$HOME/dev/01-core-infra}"

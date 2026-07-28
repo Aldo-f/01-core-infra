@@ -1,15 +1,7 @@
-http:
-  routers:
-    freellmapi:
-      rule: "Host(`freellm.aldof.duckdns.org`)"
-      service: freellmapi
-      entryPoints:
-        - websecure
-      tls:
-        certResolver: myresolver
-
-  services:
-    freellmapi:
-      loadBalancer:
-        servers:
-          - url: "http://freellmapi:3001"
+routes:
+  - rule:
+      host: "freellm.aldof.duckdns.org"
+      entrypoints:
+        - web
+    services:
+      - freellmapi
