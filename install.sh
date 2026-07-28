@@ -1,22 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Hardcoded installation directory - works for any user
+# Hardcoded installation directory - works for any user and any invocation method
 INSTALL_DIR="/home/aldo/dev/01-core-infra"
 
 # Repository configuration
 REPO_URL="https://github.com/Aldo-f/01-core-infra.git"
 VERSION="main"
 
-# Determine where this script is located
-if [ -n "${BASH_SOURCE[0]:-}" ]; then
-  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-else
-  # When script is piped into bash, use current directory as fallback
-  SCRIPT_DIR="$(pwd)"
-fi
-
-# If the installation directory already exists, update it; otherwise clone
+# Ensure installation directory exists - update if already present, clone otherwise
 if [ -d "$INSTALL_DIR" ]; then
   if [ -d "$INSTALL_DIR/.git" ]; then
     echo "Repository already exists at $INSTALL_DIR – updating to $VERSION"
@@ -29,5 +21,10 @@ else
   git clone --depth 1 --branch "$VERSION" "$REPO_URL" "$INSTALL_DIR"
 fi
 
-# Execute the deployment script
-exec "$SCRIPT_DIR/scripts/deploy.sh" "$@"
+# Execute the deployment script (always located at $INSTALL_DIR/scripts/deploy.sh)
+if [ -f "$INSTALL_DIR/scripts/deploy.sh" ]; then
+  exec "$INSTALL_DIR/scripts/deploy.sh" "$@"
+else
+  echo "ERROR: Deployment script not found at $INSTALL_DIR/scripts/deploy.sh"
+  exit 1
+fi
