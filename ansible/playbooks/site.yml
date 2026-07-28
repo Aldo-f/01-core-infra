@@ -15,13 +15,12 @@
       - nvm
       - node
       - npm
-      - tailscale
+      - tree
       - ollama
       - lmstudio
       - fish
       - hermes
       - opencode
-      - tree
 
   pre_tasks:
     - name: Detect system RAM in MB
@@ -39,17 +38,18 @@
           {{
             'qwen3:4b' if ram_mb < 12000
             else 'qwen3:8b' if ram_mb < 20000
-            else 'qrem3.6:27b-q4_K_M'
+            else 'qwen3.6:27b-q4_K_M'
           }}
 
   tasks:
-    - name: Install Docker, Docker Compose, Node.js, and npm
+    - name: Install Docker, Docker Compose, Node.js, npm, and tree
       apt:
         name:
           - docker.io
           - docker-compose
           - nodejs
           - npm
+          - tree
         state: present
         update_cache: yes
 
@@ -64,7 +64,7 @@
         state: directory
         mode: "0755"
 
-    - name: Clone Toerekening repo
+    - name: Clone or update Toerekening repo
       git:
         repo: https://github.com/aldo-f/toerekening.git
         dest: /home/aldo/dev/06-apps-toerekening
@@ -105,7 +105,4 @@
           args:
             executable: /bin/bash
             chdir: /home/aldo/dev/02-ai-freellm
-          environment:
-            PATH: "/home/aldo/.nvm/versions/node/v24.18.0/bin:/home/aldo/.nvm:$PATH"
-            NVM_DIR: "/home/aldo/.nvm"
       when: "'freellmapi' in tools_sentries or true"
