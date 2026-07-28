@@ -2,7 +2,7 @@
 set -euo pipefail
 
 INSTALL_DIR="${INSTALL_DIR:-$HOME/dev/01-core-infra}"
-REPO_URL="${REPO_URL:-https://github.com/aldo/01-core-infra.git}"
+REPO_URL="${REPO_URL:-https://github.com/Aldo-f/01-core-infra.git}"
 VERSION="${VERSION:-main}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
