@@ -2,22 +2,23 @@
 set -euo pipefail
 
 # Robust installer for 01-core-infra
-# Works when executed directly, via sudo, or piped from curl
-# Usage: curl -fsSL https://raw.githubusercontent.com/Aldo-f/01-core-infra/main/install.sh | sudo bash
+# Works when executed directly or piped from curl
+# Usage: curl -fsSL https://raw.githubusercontent.com/Aldo-f/01-core-infra/main/install.sh | bash
+# (Run WITHOUT sudo - the script will ask for sudo only when needed)
 
-# Hardcoded installation location - independent of who runs the script
-# This ensures consistency whether run as user 'aldo' or 'root' via sudo
+# Hardcoded installation location
 INSTALL_DIR="/home/aldo/dev/01-core-infra"
 
 # Repository configuration
 REPO_URL="https://github.com/Aldo-f/01-core-infra.git"
 VERSION="main"
 
-# Ensure the target directory exists and is writable
-# When run via sudo, we need to ensure /home/aldo has proper permissions
-if ! [ -d "$INSTALL_DIR" ]; then
-  # Try to create the directory (may fail if /home/aldo doesn't exist or isn't writable by current user)
-  mkdir -p "$INSTALL_DIR" 2>/dev/null || true
+# Ensure we're running as 'aldo' user, not root
+if [ "$(id -u)" -eq 0 ]; then
+  echo "ERROR: Do not run this script with sudo/root."
+  echo "Run it as your regular user - it will ask for sudo password when needed:"
+  echo "  curl -fsSL https://raw.githubusercontent.com/Aldo-f/01-core-infra/main/install.sh | bash"
+  exit 1
 fi
 
 # Ensure installation directory exists - update if already present, clone otherwise
@@ -34,11 +35,10 @@ else
   git clone --depth 1 --branch "$VERSION" "$REPO_URL" "$INSTALL_DIR"
 fi
 
-# Execute the deployment script located at $INSTALL_DIR/scripts/deploy.sh
+# Execute the deployment script (it will use sudo internally for privileged ops)
 if [ -f "$INSTALL_DIR/scripts/deploy.sh" ]; then
   exec "$INSTALL_DIR/scripts/deploy.sh" "$@"
 else
   echo "ERROR: Deployment script not found at $INSTALL_DIR/scripts/deploy.sh"
-  echo "Please check if the repository structure is intact"
   exit 1
 fi
