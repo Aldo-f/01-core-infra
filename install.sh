@@ -1,31 +1,26 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Determine installation directory (defaults to ~/dev/01-core-infra)
-INSTALL_DIR="${INSTALL_DIR:-$HOME/dev/01-core-infra}"
+# Robust installer for 01-core-infra
+# Works when executed directly, via sudo, or piped from curl
+# Usage: curl -fsSL https://raw.githubusercontent.com/Aldo-f/01-core-infra/main/install.sh | sudo bash
 
-# Repository URL and version (defaults to main branch)
-REPO_URL="${REPO_URL:-https://github.com/Aldo-f/01-core-infra.git}"
-VERSION="${VERSION:-main}"
+# Hardcoded installation location - independent of who runs the script
+# This ensures consistency whether run as user 'aldo' or 'root' via sudo
+INSTALL_DIR="/home/aldo/dev/01-core-infra"
 
-# Determine where this script lives - works for both direct exec and piped input
-if [ -n "${BASH_SOURCE:-}" ]; then
-  # BASH_SOURCE available when executed from file
-  script_source="${BASH_SOURCE[0]}"
-else
-  # When script is piped (e.g., curl | bash), BASH_SOURCE is empty
-  script_source=""
+# Repository configuration
+REPO_URL="https://github.com/Aldo-f/01-core-infra.git"
+VERSION="main"
+
+# Ensure the target directory exists and is writable
+# When run via sudo, we need to ensure /home/aldo has proper permissions
+if ! [ -d "$INSTALL_DIR" ]; then
+  # Try to create the directory (may fail if /home/aldo doesn't exist or isn't writable by current user)
+  mkdir -p "$INSTALL_DIR" 2>/dev/null || true
 fi
 
-# Determine script directory
-if [ -n "$script_source" ]; then
-  SCRIPT_DIR="$(cd "$(dirname "$script_source")" && pwd)"
-else
-  # For piped input, defer directory resolution until after clone/update
-  SCRIPT_DIR=""
-fi
-
-# If installation directory exists, update it; otherwise clone it
+# Ensure installation directory exists - update if already present, clone otherwise
 if [ -d "$INSTALL_DIR" ]; then
   if [ -d "$INSTALL_DIR/.git" ]; then
     echo "Repository already exists at $INSTALL_DIR – updating to $VERSION"
@@ -35,12 +30,15 @@ if [ -d "$INSTALL_DIR" ]; then
     echo "Directory $INSTALL_DIR exists but is not a git repository – skipping clone."
   fi
 else
+  echo "Cloning 01-core-infra into $INSTALL_DIR"
   git clone --depth 1 --branch "$VERSION" "$REPO_URL" "$INSTALL_DIR"
 fi
 
-# After clone/update, resolve SCRIPT_DIR to the repo root for deploy.sh
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-}")" && pwd)" 2>/dev/null || \
-  SCRIPT_DIR="$INSTALL_DIR"
-
-# Execute the actual deployment (which runs Ansible)
-exec "$SCRIPT_DIR/scripts/deploy.sh" "$@"
+# Execute the deployment script located at $INSTALL_DIR/scripts/deploy.sh
+if [ -f "$INSTALL_DIR/scripts/deploy.sh" ]; then
+  exec "$INSTALL_DIR/scripts/deploy.sh" "$@"
+else
+  echo "ERROR: Deployment script not found at $INSTALL_DIR/scripts/deploy.sh"
+  echo "Please check if the repository structure is intact"
+  exit 1
+fi
