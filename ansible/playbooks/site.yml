@@ -39,7 +39,7 @@
           {{
             'qwen3:4b' if ram_mb < 12000
             else 'qwen3:8b' if ram_mb < 20000
-            else 'qwen3.6:27b-q4_K_M'
+            else 'qrem3.6:27b-q4_K_M'
           }}
 
   tasks:
@@ -64,22 +64,17 @@
         state: directory
         mode: "0755"
 
-    - name: Deploy Toerekening templates (copy)
-      copy:
-        src: "{{ item.src }}"
-        dest: "{{ item.dest }}"
-        mode: "{{ item.mode | default('0644') }}"
-      loop:
-        - { src: "{{ template_dir }}/apps/toerekening/Dockerfile", dest: "/home/aldo/dev/06-apps-toerekening/Dockerfile", mode: "0644" }
-        - { src: "{{ template_dir }}/apps/toerekening/docker-compose.yml", dest: "/home/aldo/dev/06-apps-toerekening/docker-compose.yml", mode: "0644" }
-        - { src: "{{ template_dir }}/apps/toerekening/package.json", dest: "/home/aldo/dev/06-apps-toerekening/package.json", mode: "0644" }
-        - { src: "{{ template_dir }}/apps/toerekening/package-lock.json", dest: "/home/aldo/dev/06-apps-toerekening/package-lock.json", mode: "0644" }
+    - name: Clone Toerekening repo
+      git:
+        repo: https://github.com/aldo-f/toerekening.git
+        dest: /home/aldo/dev/06-apps-toerekening
+        version: main
+        force: yes
 
-    - name: Bring up Toerekening via Docker Compose
-      command: docker-compose -f /home/aldo/dev/06-apps-toerekening/docker-compose.yml up -d
+    - name: Build and start Toerekening via Docker Compose
+      command: docker-compose up -d --build
       args:
         chdir: /home/aldo/dev/06-apps-toerekening
-      ignore_errors: yes
 
     - name: Setup FreelLmapi
       block:
@@ -110,4 +105,7 @@
           args:
             executable: /bin/bash
             chdir: /home/aldo/dev/02-ai-freellm
+          environment:
+            PATH: "/home/aldo/.nvm/versions/node/v24.18.0/bin:/home/aldo/.nvm:$PATH"
+            NVM_DIR: "/home/aldo/.nvm"
       when: "'freellmapi' in tools_sentries or true"
