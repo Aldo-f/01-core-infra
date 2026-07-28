@@ -1,0 +1,215 @@
+---
+# Ansible Template for Hermes auth.json Configuration
+# This Jinja2 template renders credentials from encrypted vault variables
+# Place this in: {{ playbook_dir }}/templates/infra/hermes/auth.json.j2
+
+{
+  "version": 1,
+  "providers": {},
+  "active_provider": null,
+  "updated_at": "{{ ansible_date_time.iso8601 }}",
+  "credential_pool": {
+    "openrouter": [
+{%- for cred in hermes_credential_router %}
+      {
+        "id": "{{ cred.id }}",
+        "label": "{{ cred.label }}",
+        "auth_type": "{{ cred.auth_type }}",
+        "priority": {{ cred.priority }},
+        "source": "{{ cred.source }}",
+        "access_token": "{{ {{ vault_openrouter_{{ cred.id }} }} }}",
+        "last_status": "{{ cred.last_status }}",
+        "last_status_at": {{ cred.last_status_at | to_json if cred.last_status_at is defined else 'null' }},
+        "last_error_code": {{ cred.last_error_code | to_json if cred.last_error_code is defined else 'null' }},
+        "last_error_reason": {{ cred.last_error_reason | to_json if cred.last_error_reason is defined else 'null' }},
+        "last_error_message": "{{ cred.last_error_message }}",
+        "last_error_reset_at": {{ cred.last_error_reset_at | to_json if cred.last_error_reset_at is defined else 'null' }},
+        "base_url": "{{ cred.base_url }}",
+        "request_count": {{ cred.request_count }}
+{% if 'secret_fingerprint' in cred %}
+        ,"secret_fingerprint": "{{ cred.secret_fingerprint }}"
+{% endif %}
+      }{% if not loop.last %},{% endif %}
+{%- endfor %}
+    ],
+    "opencode-zen": [
+{%- for cred in hermes_credential_opencode_zen %}
+      {
+        "id": "{{ cred.id }}",
+        "label": "{{ cred.label }}",
+        "auth_type": "{{ cred.auth_type }}",
+        "priority": {{ cred.priority }},
+        "source": "{{ cred.source }}",
+        "access_token": "{{ {{ vault_opencode_zen_{{ cred.id }} }} }}",
+        "last_status": "{{ cred.last_status }}",
+        "last_status_at": {{ cred.last_status_at | to_json if cred.last_status_at is defined else 'null' }},
+        "last_error_code": {{ cred.last_error_code | to_json if cred.last_error_code is defined else 'null' }},
+        "last_error_reason": {{ cred.last_error_reason | to_json if cred.last_error_reason is defined else 'null' }},
+        "last_error_message": "{{ cred.last_error_message }}",
+        "last_error_reset_at": {{ cred.last_error_reset_at | to_json if cred.last_error_reset_at is defined else 'null' }},
+        "base_url": "{{ cred.base_url }}",
+        "request_count": {{ cred.request_count }}
+{% if 'secret_fingerprint' in cred %}
+        ,"secret_fingerprint": "{{ cred.secret_fingerprint }}"
+{% endif %}
+      }{% if not loop.last %},{% endif %}
+{%- endfor %}
+    ],
+    "gemini": [
+{%- for cred in hermes_credential_gemini %}
+      {
+        "id": "{{ cred.id }}",
+        "label": "{{ cred.label }}",
+        "auth_type": "{{ cred.auth_type }}",
+        "priority": {{ cred.priority }},
+        "source": "{{ cred.source }}",
+        "access_token": "{{ {{ vault_gemini_{{ cred.id }} }} }}",
+        "last_status": {{ cred.last_status | to_json if cred.last_status is defined else 'null' }},
+        "last_status_at": {{ cred.last_status_at | to_json if cred.last_status_at is defined else 'null' }},
+        "last_error_code": {{ cred.last_error_code | to_json if cred.last_error_code is defined else 'null' }},
+        "last_error_reason": {{ cred.last_error_reason | to_json if cred.last_error_reason is defined else 'null' }},
+        "last_error_message": "{{ cred.last_error_message }}",
+        "last_error_reset_at": {{ cred.last_error_reset_at | to_json if cred.last_error_reset_at is defined else 'null' }},
+        "base_url": "{{ cred.base_url }}",
+        "request_count": {{ cred.request_count }}
+{% endif %}
+      }{% if not loop.last %},{% endif %}
+{%- endfor %}
+    ],
+    "google-gemini-cli": [
+{%- for cred in hermes_credential_gemini_cli %}
+      {
+        "id": "{{ cred.id }}",
+        "label": "{{ cred.label }}",
+        "auth_type": "{{ cred.auth_type }}",
+        "priority": {{ cred.priority }},
+        "source": "{{ cred.source }}",
+        "access_token": "{{ {{ vault_gemini_cli_{{ cred.id }} }} }}",
+        "refresh_token": "{{ {{ vault_gemini_cli_{{ cred.id }} }}_refresh }}"
+{%- if cred.last_status is defined %}
+        ,"last_status": {{ cred.last_status | to_json }},
+        "last_status_at": {{ cred.last_status_at | to_json if cred.last_status_at is defined else 'null' }},
+        "last_error_code": {{ cred.last_error_code | to_json if cred.last_error_code is defined else 'null' }},
+        "last_error_reason": {{ cred.last_error_reason | to_json if cred.last_error_reason is defined else 'null' }},
+        "last_error_message": "{{ cred.last_error_message }}",
+        "last_error_reset_at": {{ cred.last_error_reset_at | to_json if cred.last_error_reset_at is defined else 'null' }},
+        "request_count": {{ cred.request_count }}
+{%- endif %}
+      }{% if not loop.last %},{% endif %}
+{%- endfor %}
+    ],
+    "xai": [
+{%- for cred in hermes_credential_xai %}
+      {
+        "id": "{{ cred.id }}",
+        "label": "{{ cred.label }}",
+        "auth_type": "{{ cred.auth_type }}",
+        "priority": {{ cred.priority }},
+        "source": "{{ cred.source }}",
+        "access_token": "{{ {{ vault_xai_{{ cred.id }} }} }}",
+        {% if 'refresh_token' in cred %}
+        "refresh_token": "{{ {{ vault_xai_{{ cred.id }} }}_refresh }}",
+        {% endif %}
+        "last_status": {{ cred.last_status | to_json if cred.last_status is defined else 'null' }},
+        "last_error_code": {{ cred.last_error_code | to_json if cred.last_error_code is defined else 'null' }},
+        "base_url": "{{ cred.base_url }}"
+      }{% if not loop.last %},{% endif %}
+{%- endfor %}
+    ],
+    "alibaba": [
+{%- for cred in hermes_credential_alibaba %}
+      {
+        "id": "{{ cred.id }}",
+        "label": "{{ cred.label }}",
+        "auth_type": "{{ cred.auth_type }}",
+        "priority": {{ cred.priority }},
+        "source": "{{ cred.source }}",
+        "access_token": "{{ {{ vault_alibaba_{{ cred.id }} }} }}",
+        "last_status": {{ cred.last_status | to_json if cred.last_status is defined else 'null' }},
+        "last_error_code": {{ cred.last_error_code | to_json if cred.last_error_code is defined else 'null' }},
+        "base_url": "{{ cred.base_url }}"
+      }{% if not loop.last %},{% endif %}
+{%- endfor %}
+    ],
+    "tencent-tokenhub": [
+{%- for cred in hermes_credential_tencent_tokenhub %}
+      {
+        "id": "{{ cred.id }}",
+        "label": "{{ cred.label }}",
+        "auth_type": "{{ cred.auth_type }}",
+        "priority": {{ cred.priority }},
+        "source": "{{ cred.source }}",
+        "access_token": "{{ {{ vault_tencent_tokenhub_{{ cred.id }} }} }}",
+        "last_status": {{ cred.last_status | to_json if cred.last_status is defined else 'null' }},
+        "last_error_code": {{ cred.last_error_code | to_json if cred.last_error_code is defined else 'null' }},
+        "base_url": "{{ cred.base_url }}"
+      }{% if not loop.last %},{% endif %}
+{%- endfor %}
+    ],
+    "ollama-cloud": [
+{%- for cred in hermes_credential_ollama_cloud %}
+      {
+        "id": "{{ cred.id }}",
+        "label": "{{ cred.label }}",
+        "auth_type": "{{ cred.auth_type }}",
+        "priority": {{ cred.priority }},
+        "source": "{{ cred.source }}",
+        "access_token": "{{ {{ vault_ollama_cloud_{{ cred.id }} }} }}",
+        "last_status": {{ cred.last_status | to_json if cred.last_status is defined else 'null' }},
+        "last_error_code": {{ cred.last_error_code | to_json if cred.last_error_code is defined else 'null' }},
+        "base_url": "{{ cred.base_url }}"
+      }{% if not loop.last %},{% endif %}
+{%- endfor %}
+    ],
+    "nvidia": [
+      {
+        "id": "8571a8",
+        "label": "NVIDIA_API_KEY",
+        "auth_type": "api_key",
+        "priority": 0,
+        "source": "env:NVIDIA_API_KEY",
+        "last_status": {{ '\"ok\"' if creds.nvidia_status else 'null' }},
+        "last_error_code": {{ creds.nvidia_error_code | to_json if creds.nvidia_error_code is defined else 'null' }},
+        "base_url": "https://integrate.api.nvidia.com/v1",
+        "request_count": 0,
+        "secret_fingerprint": "sha256:9c6d20cdc12d717c"
+      }
+    ],
+    "custom:freellmapi": [],
+    "custom:freellm.dev.aldof.duckdns.org": [],
+    "custom:freellmapi-(local)": [],
+    "custom:192.168.0.5:3001": [],
+    "custom:freellm.aldof.duckdns.org": [],
+    "custom:prod---local": [],
+    "custom:omniroute---outside": [],
+    "custom:omniroute": [],
+    "custom:omniroute---local": [
+      {
+        "id": "bf5325",
+        "label": "OmniRoute - local",
+        "auth_type": "api_key",
+        "priority": 0,
+        "source": "config:OmniRoute - local",
+        "access_token": "{{ {{ vault_omniroute_local_bf5325 }} }}",
+        "last_status": "ok",
+        "last_error_code": null,
+        "base_url": "http://192.168.0.5:20128/v1",
+        "request_count": 0,
+        "secret_fingerprint": "sha256:10b07e30acd2caae"
+      },
+      {
+        "id": "516eea",
+        "label": "model_config",
+        "auth_type": "api_key",
+        "priority": 1,
+        "source": "model_config",
+        "access_token": "{{ {{ vault_omniroute_model_config }} }}",
+        "last_status": "ok",
+        "last_error_code": null,
+        "base_url": "http://192.168.0.5:20128/v1",
+        "request_count": 0,
+        "secret_fingerprint": "sha256:10b07e30acd2caae"
+      }
+    ]
+  }
+}

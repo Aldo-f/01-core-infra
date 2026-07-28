@@ -1,0 +1,61 @@
+---
+- hosts: all
+  become: yes
+  vars:
+    hermes_webui_repo: https://github.com/nesquena/hermes-webui.git
+    hermes_webui_version: main
+    hermes_webui_dir: "{{ ansible_env.HOME }}/dev/02-ai-hermes-webui"
+  tasks:
+    - name: Ensure hermes-webui directory exists
+      file:
+        path: "{{ hermes_webui_dir }}"
+        state: directory
+      become: no
+
+    - name: Clone or update hermes-webui repo
+      git:
+        repo: "{{ hermes_webui_repo }}"
+        dest: "{{ hermes_webui_dir }}"
+        version: "{{ hermes_webui_version }}"
+        force: yes
+      become: no
+
+    - name: Ensure start.sh is executable
+      file:
+        path: "{{ hermes_webui_dir }}/start.sh"
+        mode: '0755'
+      become: no
+
+    - name: Deploy hermes-webui systemd service
+      copy:
+        dest: /etc/systemd/system/app-hermes-webui.service
+        content: |
+          [Unit]
+          Description=Hermes WebUI Service
+          After=network.target
+
+          [Service]
+          Environment=HERMES_WEBUI_HOST=0.0.0.0
+          ExecStart={{ hermes_webui_dir }}/start.sh
+          WorkingDirectory={{ hermes_webui_dir }}
+          Restart=always
+          User={{ ansible_user_id }}
+
+          [Install]
+          WantedBy=multi-user.target
+        owner: root
+        group: root
+        mode: '0644'
+      notify:
+        - Reload systemd
+        - Enable and start hermes-webui
+
+  handlers:
+    - name: Reload systemd
+      command: systemctl daemon-reload
+
+    - name: Enable and start hermes-webui
+      systemd:
+        name: app-hermes-webui.service
+        enabled: yes
+        state: started

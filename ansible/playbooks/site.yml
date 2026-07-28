@@ -4,13 +4,24 @@
   become: true
   gather_facts: yes
   vars:
-    dev_home: "/home/aldo/dev"
-    infra_dir: "{{ dev_home }}/01-core-infra"
-    template_dir: "{{ infra_dir }}/templates"
-    infra_templates: "{{ template_dir }}/infra"
-    repo_manifest: "{{ infra_templates }}/repos.manifest.jsonc"
+    script_dir: "/home/aldo/dev/01-core-infra"
+    template_dir: "{{ script_dir }}/templates"
+    repo_manifest: "{{ template_dir }}/repos.manifest.jsonc"
     ollama_api_key_file: "/home/aldo/.config/ollama/api_key"
-    container_test: false  # zet op true bij testen in Docker (skips daemon-afhankelijke taken)
+    container_test: false
+    traefik_network: "traefik_net"
+    tools_sentries:
+      - docker
+      - nvm
+      - node
+      - npm
+      - tailscale
+      - ollama
+      - lmstudio
+      - fish
+      - hermes
+      - opencode
+      - tree
 
   pre_tasks:
     - name: Detect system RAM in MB
@@ -31,8 +42,30 @@
             else 'qwen3.6:27b-q4_K_M'
           }}
 
-  # no roles needed – we inline the required actions
   tasks:
+    - name: Install Docker and Docker Compose
+      apt:
+        name: 
+          - docker.io
+          - docker-compose
+        state: present
+        update_cache: yes
+
+    - name: Ensure NVM is loaded for subsequent tasks
+      shell: |
+        source /home/aldo/.nvm/nvm.sh
+        export NVM_DIR="/home/aldo/.nvm"
+        export PATH="/home/aldo/.nvm/versions/node/v24.18.0/bin:/home/aldo/.nvm:$PATH"
+        echo "NVM loaded"
+      args:
+        executable: /bin/bash
+      become: false
+
+    - name: Ensure Traefik network exists
+      docker_network:
+        name: "{{ traefik_network }}"
+        state: present
+
     - name: Ensure Toerekening target directory exists
       file:
         path: "/home/aldo/dev/06-apps-toerekening"
@@ -45,19 +78,59 @@
         dest: "{{ item.dest }}"
         mode: "{{ item.mode | default('0644') }}"
       loop:
-        - src: "/home/aldo/dev/01-core-infra/templates/apps/toerekening/Dockerfile"
-          dest: "/home/aldo/dev/06-apps-toerekening/Dockerfile"
-          mode: "0644"
-        - src: "/home/aldo/dev/01-core-infra/templates/apps/toerekening/docker-compose.yml"
-          dest: "/home/aldo/dev/06-apps-toerekening/docker-compose.yml"
-          mode: "0644"
-        - src: "/home/aldo/dev/01-core-infra/templates/apps/toerekening/package.json"
-          dest: "/home/aldo/dev/06-apps-toerekening/package.json"
-        - src: "/home/aldo/dev/01-core-infra/templates/apps/toerekening/package-lock.json"
-          dest: "/home/aldo/dev/06-apps-toerekening/package-lock.json"
+        - { src: "{{ template_dir }}/apps/toerekening/Dockerfile", dest: "/home/aldo/dev/06-apps-toerekening/Dockerfile", mode: "0644" }
+        - { src: "{{ template_dir }}/apps/toerekening/docker-compose.yml", dest: "/home/aldo/dev/06-apps-toerekening/docker-compose.yml", mode: "0644" }
+        - { src: "{{ template_dir }}/apps/toerekening/package.json", dest: "/home/aldo/dev/06-apps-toerekening/package.json", mode: "0644" }
+        - { src: "{{ template_dir }}/apps/toerekening/package-lock.json", dest: "/home/aldo/dev/06-apps-toerekening/package-lock.json", mode: "0644" }
 
-    - name: Bring up toerekening via Docker Compose
-      command: docker compose -f /home/aldo/dev/06-apps-toerekening/docker-compose.yml up -d
+    - name: Bring up Toerekening via Docker Compose
+      command: docker-compose -f /home/aldo/dev/06-apps-toerekening/docker-compose.yml up -d
       args:
         chdir: /home/aldo/dev/06-apps-toerekening
       ignore_errors: yes
+
+    - name: Setup FreelLmapi
+      block:
+        - name: Clone FreelLmapi repo
+          git:
+            repo: https://github.com/aldo-f/freellmapi.git
+            dest: /home/aldo/dev/02-ai-freellm
+            version: upstream
+            update: yes
+
+        - name: Install FreelLmapi Node.js dependencies
+          shell: |
+            export NVM_DIR="/home/aldo/.nvm"
+            source "$NVM_DIR/nvm.sh"
+            cd /home/aldo/dev/02-ai-freellm
+            npm ci
+          args:
+            executable: /bin/bash
+          environment:
+            PATH: "/home/aldo/.nvm/versions/node/v24.18.0/bin:/home/aldo/.nvm:$PATH"
+            NVM_DIR: "/home/aldo/.nvm"
+
+        - name: Build FreelLmapi
+          shell: |
+            export NVM_DIR="/home/aldo/.nvm"
+            source "$NVM_DIR/nvm.sh"
+            cd /home/aldo/dev/02-ai-freellm
+            npm run build
+          args:
+            executable: /bin/bash
+            creates: /home/aldo/dev/02-ai-freellm/server/dist
+          environment:
+            PATH: "/home/aldo/.nvm/versions/node/v24.18.0/bin:/home/aldo/.nvm:$PATH"
+            NVM_DIR: "/home/aldo/.nvm"
+          register: build_result
+          changed_when: false
+
+        - name: Deploy FreelLmapi via Docker Compose
+          shell: docker-compose up -d
+          args:
+            executable: /bin/bash
+            chdir: /home/aldo/dev/02-ai-freellm
+          environment:
+            PATH: "/home/aldo/.nvm/versions/node/v24.18.0/bin:/home/aldo/.nvm:$PATH"
+            NVM_DIR: "/home/aldo/.nvm"
+      when: "'freellmapi' in tools_sentries or true"

@@ -1,27 +1,37 @@
-# Runtime-directories die door install.sh worden gegenereerd uit templates/
-# Deze zijn GEEN Source of Truth — nooit direct bewerken, dus ook niet committen.
-portainer/
-plex/
-qbittorrent/
-cockpit/
+# .gitignore for Hermes Credentials Vault
 
-# Netwerkstack runtime (beheerd door install.sh, bron zit in templates/infra/)
-# NB: 04-network-* staan buiten deze repo; hier alleen ter conservatieve dekking
-/04-network-*/
+# Ansible Vault master keys (NEVER commit these)
+vaults/master.key
+vaults/.hgignore
 
-# Logs en tijdelijke bestanden
-logs/
-*.log
-install.log
+# Generated runtime files (never committed)
+../ansible/templates/auth.json
+auth.json
 
-# Secrets nooit committen
-secrets.json
-*.env
+# Environment files with secrets (NEVER commit)
 .env
 .env.*
-!.env.template
+*.env
 
-# Build artifacts
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.env/
+
+# Node
 node_modules/
-dist/
-bun.lock
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
