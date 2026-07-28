@@ -43,23 +43,15 @@
           }}
 
   tasks:
-    - name: Install Docker and Docker Compose
+    - name: Install Docker, Docker Compose, Node.js, and npm
       apt:
-        name: 
+        name:
           - docker.io
           - docker-compose
+          - nodejs
+          - npm
         state: present
         update_cache: yes
-
-    - name: Ensure NVM is loaded for subsequent tasks
-      shell: |
-        source /home/aldo/.nvm/nvm.sh
-        export NVM_DIR="/home/aldo/.nvm"
-        export PATH="/home/aldo/.nvm/versions/node/v24.18.0/bin:/home/aldo/.nvm:$PATH"
-        echo "NVM loaded"
-      args:
-        executable: /bin/bash
-      become: false
 
     - name: Ensure Traefik network exists
       docker_network:
@@ -100,37 +92,22 @@
 
         - name: Install FreelLmapi Node.js dependencies
           shell: |
-            export NVM_DIR="/home/aldo/.nvm"
-            source "$NVM_DIR/nvm.sh"
             cd /home/aldo/dev/02-ai-freellm
             npm ci
           args:
             executable: /bin/bash
-          environment:
-            PATH: "/home/aldo/.nvm/versions/node/v24.18.0/bin:/home/aldo/.nvm:$PATH"
-            NVM_DIR: "/home/aldo/.nvm"
 
         - name: Build FreelLmapi
           shell: |
-            export NVM_DIR="/home/aldo/.nvm"
-            source "$NVM_DIR/nvm.sh"
             cd /home/aldo/dev/02-ai-freellm
             npm run build
           args:
             executable: /bin/bash
             creates: /home/aldo/dev/02-ai-freellm/server/dist
-          environment:
-            PATH: "/home/aldo/.nvm/versions/node/v24.18.0/bin:/home/aldo/.nvm:$PATH"
-            NVM_DIR: "/home/aldo/.nvm"
-          register: build_result
-          changed_when: false
 
         - name: Deploy FreelLmapi via Docker Compose
           shell: docker-compose up -d
           args:
             executable: /bin/bash
             chdir: /home/aldo/dev/02-ai-freellm
-          environment:
-            PATH: "/home/aldo/.nvm/versions/node/v24.18.0/bin:/home/aldo/.nvm:$PATH"
-            NVM_DIR: "/home/aldo/.nvm"
       when: "'freellmapi' in tools_sentries or true"
