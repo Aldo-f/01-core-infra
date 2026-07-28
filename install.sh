@@ -4,7 +4,7 @@ set -euo pipefail
 # Hardcoded installation directory - works for any user and any invocation method
 INSTALL_DIR="/home/aldo/dev/01-core-infra"
 
-# Repository configuration
+# Repository configuration - use https for installer to avoid ssh key issues
 REPO_URL="https://github.com/Aldo-f/01-core-infra.git"
 VERSION="main"
 
