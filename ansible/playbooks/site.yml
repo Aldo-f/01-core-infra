@@ -79,6 +79,7 @@
               base_url: http://192.168.0.5:3001/v1
               api_key: "freellmapi-f7c7b8542d6904afe2c39640de28b0f797f47d5f21ff6723"
               model: auto
+      become_user: aldo
 
     - name: Ensure Traefik network exists
       command: docker network create {{ traefik_network }}
@@ -90,6 +91,7 @@
         rm -rf /home/aldo/dev/06-apps-toerekening
       args:
         executable: /bin/bash
+      become: true
 
     - name: Clone Toerekening repo
       git:
@@ -97,6 +99,7 @@
         dest: /home/aldo/dev/06-apps-toerekening
         version: main
         force: yes
+      become_user: aldo
 
     - name: Copy Toerekening template files
       copy:
@@ -107,11 +110,13 @@
         - { src: "{{ template_dir }}/apps/toerekening/Dockerfile", dest: "/home/aldo/dev/06-apps-toerekening/Dockerfile" }
         - { src: "{{ template_dir }}/apps/toerekening/package.json", dest: "/home/aldo/dev/06-apps-toerekening/package.json" }
         - { src: "{{ template_dir }}/apps/toerekening/package-lock.json", dest: "/home/aldo/dev/06-apps-toerekening/package-lock.json" }
+      become_user: aldo
 
     - name: Build and start Toerekening via Docker Compose
       command: docker-compose up -d --build
       args:
         chdir: /home/aldo/dev/06-apps-toerekening
+      become_user: aldo
 
     - name: Setup FreelLmapi
       block:
@@ -134,6 +139,7 @@
           args:
             executable: /bin/bash
           when: not freellmapi_node_modules.stat.exists
+          become_user: aldo
 
         - name: Build FreelLmapi
           shell: |
@@ -142,62 +148,12 @@
           args:
             executable: /bin/bash
             creates: /home/aldo/dev/02-ai-freellm/server/dist
+          become_user: aldo
 
         - name: Deploy FreelLmapi via Docker Compose
           shell: docker-compose up -d
           args:
             executable: /bin/bash
             chdir: /home/aldo/dev/02-ai-freellm
+          become_user: aldo
       when: "'freellmapi' in tools_sentries or true"
-
-    - name: Setup mem0 memory backend
-      block:
-        - name: Install mem0 pip packages
-          pip:
-            name:
-              - mem0ai
-              - qdrant-client
-            state: present
-            executable: /home/aldo/.hermes/hermes-agent/venv/bin/python3 -m pip
-
-        - name: Ensure Ollama embedding model is available
-          command: ollama pull nomic-embed-text
-          become: false
-          register: ollama_pull
-          changed_when: "'pulling' in ollama_pull.stdout"
-          failed_when: false
-
-        - name: Ensure Qdrant storage directory exists
-          file:
-            path: /home/aldo/.hermes/mem0_qdrant
-            state: directory
-            owner: aldo
-            group: aldo
-            mode: "0755"
-
-        - name: Pre-initialize Qdrant collection
-          script: scripts/setup-mem0.sh
-          become: false
-          register: mem0_setup
-          changed_when: "'Created' in mem0_setup.stdout or 'Recreated' in mem0_setup.stdout"
-
-        - name: Enable mem0 in Hermes config
-          command: hermes config set memory.provider mem0
-          become: false
-          register: mem0_config
-          changed_when: "'Set' in mem0_config.stdout"
-      when: "'mem0' in tools_sentries"
-
-    - name: Verify mem0 is active and available
-      ansible.builtin.command: hermes memory status
-      become: false
-      register: mem0_status_check
-      changed_when: false
-
-    - name: Assert mem0 is correctly configured
-      ansible.builtin.assert:
-        that:
-          - "'Provider:  mem0' in mem0_status_check.stdout"
-          - "'Status:    available \u2713' in mem0_status_check.stdout"
-        fail_msg: "Mem0 is not configured correctly or is not available. Check `hermes memory status` manually."
-      when: "'mem0' in tools_sentries"
