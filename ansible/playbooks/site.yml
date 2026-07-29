@@ -20,7 +20,7 @@
       - lmstudio
       - fish
       - hermes
-      - opencode
+      - omo
 
   pre_tasks:
     - name: Detect system RAM in MB
@@ -35,11 +35,11 @@
     - name: Select Ollama model based on RAM
       set_fact:
         ollama_model: >-
-          {{
+          {
             'qwen3:4b' if ram_mb < 12000
             else 'qwen3:8b' if ram_mb < 20000
             else 'qwen3.6:27b-q4_K_M'
-          }}
+          }
 
   tasks:
     - name: Install Docker, Docker Compose, Node.js, npm, and tree
@@ -53,40 +53,14 @@
         state: present
         update_cache: yes
 
-    - name: Install opencode via npm
-      command: npm install -g opencode-ai
+    - name: Install omo via npm
+      command: npm install -g omo
+      become: true
 
     - name: Ensure Traefik network exists
-      command: docker network create {{ traefik_network }}
-      ignore_errors: true
-
-    - name: Check if node_modules exists for FreelLmapi
-      stat:
-        path: /home/aldo/dev/02-ai-freellm/node_modules
-      register: freellmapi_node_modules
-
-    - name: Install FreelLmapi Node.js dependencies
-      shell: |
-        cd /home/aldo/dev/02-ai-freellm
-        npm ci
-      args:
-        executable: /bin/bash
-      when: not freellmapi_node_modules.stat.exists
-
-    - name: Build FreelLmapi
-      shell: |
-        cd /home/aldo/dev/02-ai-freellm
-        npm run build
-      args:
-        executable: /bin/bash
-        creates: /home/aldo/dev/02-ai-freellm/server/dist
-
-    - name: Deploy FreelLmapi via Docker Compose
-      shell: docker-compose up -d
-      args:
-        executable: /bin/bash
-        chdir: /home/aldo/dev/02-ai-freellm
-      when: "'freellmapi' in tools_sentries or true"
+      docker_network:
+        name: "{{ traefik_network }}"
+        state: present
 
     - name: Remove Toerekening directory if exists (to ensure clean clone)
       file:
@@ -100,7 +74,54 @@
         version: main
         force: yes
 
+    - name: Copy Toerekening template files
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+      loop:
+        - { src: "{{ template_dir }}/apps/toerekening/docker-compose.yml", dest: "/home/aldo/dev/06-apps-toerekening/docker-compose.yml" }
+        - { src: "{{ template_dir }}/apps/toerekening/Dockerfile", dest: "/home/aldo/dev/06-apps-toerekening/Dockerfile" }
+        - { src: "{{ template_dir }}/apps/toerekening/package.json", dest: "/home/aldo/dev/06-apps-toerekening/package.json" }
+        - { src: "{{ template_dir }}/apps/toerekening/package-lock.json", dest: "/home/aldo/dev/06-apps-toerekening/package-lock.json" }
+
     - name: Build and start Toerekening via Docker Compose
       command: docker-compose up -d --build
       args:
         chdir: /home/aldo/dev/06-apps-toerekening
+
+    - name: Setup FreelLmapi
+      block:
+        - name: Clone FreelLmapi repo
+          git:
+            repo: https://github.com/aldo-f/freellmapi.git
+            dest: /home/aldo/dev/02-ai-freellm
+            version: upstream
+            update: yes
+
+        - name: Check if node_modules exists for FreelLmapi
+          stat:
+            path: /home/aldo/dev/02-ai-freellm/node_modules
+          register: freellmapi_node_modules
+
+        - name: Install FreelLmapi Node.js dependencies
+          shell: |
+            cd /home/aldo/dev/02-ai-freellm
+            npm ci
+          args:
+            executable: /bin/bash
+          when: not freellmapi_node_modules.stat.exists
+
+        - name: Build FreelLmapi
+          shell: |
+            cd /home/aldo/dev/02-ai-freellm
+            npm run build
+          args:
+            executable: /bin/bash
+            creates: /home/aldo/dev/02-ai-freellm/server/dist
+
+        - name: Deploy FreelLmapi via Docker Compose
+          shell: docker-compose up -d
+          args:
+            executable: /bin/bash
+            chdir: /home/aldo/dev/02-ai-freellm
+      when: "'freellmapi' in tools_sentries or true"
