@@ -1,7 +1,29 @@
-routes:
-  - rule:
-      host: "freellm.aldof.duckdns.org"
-      entrypoints:
+http:
+  routers:
+    freellm-http:
+      rule: "Host(`freellm.aldof.duckdns.org`)"
+      entryPoints:
         - web
-    services:
-      - freellmapi
+      middlewares:
+        - https-redirect
+      service: freellmapi
+
+    freellm:
+      rule: "Host(`freellm.aldof.duckdns.org`)"
+      entryPoints:
+        - websecure
+      service: freellmapi
+      tls:
+        certResolver: myresolver
+
+  services:
+    freellmapi:
+      loadBalancer:
+        servers:
+          - url: "http://freellmapi:3001"
+
+  middlewares:
+    https-redirect:
+      redirectScheme:
+        scheme: https
+        permanent: true
