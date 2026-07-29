@@ -21,6 +21,7 @@
       - fish
       - hermes
       - omo
+      - opencode
 
   pre_tasks:
     - name: Detect system RAM in MB
@@ -57,7 +58,7 @@
       command: npm install -g omo
       become: true
 
-    - name: Ensure opencode (opencode-ai) is installed via npm
+    - name: Install opencode via npm
       command: npm install -g opencode-ai
       become: true
 
@@ -79,8 +80,9 @@
               model: auto
 
     - name: Ensure Traefik network exists
-      command: docker network create {{ traefik_network }}
-      ignore_errors: true
+      docker_network:
+        name: "{{ traefik_network }}"
+        state: present
 
     - name: Remove Toerekening directory if exists (to ensure clean clone)
       file:
@@ -93,16 +95,6 @@
         dest: /home/aldo/dev/06-apps-toerekening
         version: main
         force: yes
-
-    - name: Copy Toerekening template files
-      copy:
-        src: "{{ item.src }}"
-        dest: "{{ item.dest }}"
-      loop:
-        - { src: "{{ template_dir }}/apps/toerekening/docker-compose.yml", dest: "/home/aldo/dev/06-apps-toerekening/docker-compose.yml" }
-        - { src: "{{ template_dir }}/apps/toerekening/Dockerfile", dest: "/home/aldo/dev/06-apps-toerekening/Dockerfile" }
-        - { src: "{{ template_dir }}/apps/toerekening/package.json", dest: "/home/aldo/dev/06-apps-toerekening/package.json" }
-        - { src: "{{ template_dir }}/apps/toerekening/package-lock.json", dest: "/home/aldo/dev/06-apps-toerekening/package-lock.json" }
 
     - name: Build and start Toerekening via Docker Compose
       command: docker-compose up -d --build
