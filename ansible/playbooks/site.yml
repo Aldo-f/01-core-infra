@@ -2,7 +2,7 @@
 - name: Rebuild development environment
   hosts: localhost
   become: true
-  gather_facts: true
+  gather_facts: yes
   vars:
     script_dir: "/home/aldo/dev/01-core-infra"
     template_dir: "{{ script_dir }}/templates"
@@ -42,7 +42,7 @@
           }}
 
   tasks:
-    - name: Install Docker, Docker Compose, Node.js, npm, and tree
+    - name: Install Docker, Docker Compose, Node.js, npm, tree, and opencode
       apt:
         name:
           - docker.io
@@ -50,7 +50,7 @@
           - nodejs
           - npm
           - tree
-          - fish
+          - opencode
         state: present
         update_cache: yes
 
@@ -59,34 +59,22 @@
         name: "{{ traefik_network }}"
         state: present
 
-    - name: Ensure Toerekening target directory absent
+    - name: Remove Toerekening directory if exists (to ensure clean clone)
       file:
         path: "/home/aldo/dev/06-apps-toerekening"
         state: absent
 
-    - name: Ensure Toerekening target directory exists
-      file:
-        path: "/home/aldo/dev/06-apps-toerekening"
-        state: directory
-        mode: "0755"
-
-    - name: Clone or update Toerekening repo
+    - name: Clone Toerekening repo
       git:
         repo: https://github.com/aldo-f/toerekening.git
         dest: /home/aldo/dev/06-apps-toerekening
         version: main
         force: yes
 
-    - name: Check for docker-compose.yml in Toerekening repo
-      stat:
-        path: /home/aldo/dev/06-apps-toerekening/docker-compose.yml
-      register: docker_compose_file
-
     - name: Build and start Toerekening via Docker Compose
       command: docker-compose up -d --build
       args:
         chdir: /home/aldo/dev/06-apps-toerekening
-      when: docker_compose_file.stat.exists
 
     - name: Setup FreelLmapi
       block:
