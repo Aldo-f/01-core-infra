@@ -21,7 +21,7 @@ This repository is the single source of truth for your homelab's core infrastruc
 
 ```bash
 # Bootstrap installer
-curl -o- https://raw.githubusercontent.com/Aldo-f/01-core-infra/v0.0.1/install.sh | bash
+curl -fs https://raw.githubusercontent.com/Aldo-f/01-core-infra/main/install.sh | bash
 
 # Full deployment
 cd ansible && ansible-playbook -i inventories/local.yml playbooks/site.yml
