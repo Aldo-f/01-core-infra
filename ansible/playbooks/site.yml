@@ -187,3 +187,17 @@
           register: mem0_config
           changed_when: "'Set' in mem0_config.stdout"
       when: "'mem0' in tools_sentries"
+
+    - name: Verify mem0 is active and available
+      ansible.builtin.command: hermes memory status
+      become: false
+      register: mem0_status_check
+      changed_when: false
+
+    - name: Assert mem0 is correctly configured
+      ansible.builtin.assert:
+        that:
+          - "'Provider:  mem0' in mem0_status_check.stdout"
+          - "'Status:    available \u2713' in mem0_status_check.stdout"
+        fail_msg: "Mem0 is not configured correctly or is not available. Check `hermes memory status` manually."
+      when: "'mem0' in tools_sentries"
