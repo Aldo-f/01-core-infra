@@ -20,6 +20,7 @@
       - lmstudio
       - fish
       - hermes
+      - opencode
 
   pre_tasks:
     - name: Detect system RAM in MB
@@ -49,68 +50,58 @@
           - nodejs
           - npm
           - tree
-          - fish # Ensure fish is always present, as discussed
         state: present
         update_cache: yes
 
-
+    - name: Install opencode via npm
+      command: npm install -g opencode-ai
 
     - name: Ensure Traefik network exists
-      community.docker.docker_network:
+      docker_network:
         name: "{{ traefik_network }}"
         state: present
 
+    - name: Check if node_modules exists for FreelLmapi
+      stat:
+        path: /home/aldo/dev/02-ai-freellm/node_modules
+      register: freellmapi_node_modules
 
+    - name: Install FreelLmapi Node.js dependencies
+      shell: |
+        cd /home/aldo/dev/02-ai-freellm
+        npm ci
+      args:
+        executable: /bin/bash
+      when: not freellmapi_node_modules.stat.exists
+
+    - name: Build FreelLmapi
+      shell: |
+        cd /home/aldo/dev/02-ai-freellm
+        npm run build
+      args:
+        executable: /bin/bash
+        creates: /home/aldo/dev/02-ai-freellm/server/dist
+
+    - name: Deploy FreelLmapi via Docker Compose
+      shell: docker-compose up -d
+      args:
+        executable: /bin/bash
+        chdir: /home/aldo/dev/02-ai-freellm
+      when: "'freellmapi' in tools_sentries or true"
+
+    - name: Remove Toerekening directory if exists (to ensure clean clone)
+      file:
+        path: "/home/aldo/dev/06-apps-toerekening"
+        state: absent
 
     - name: Clone Toerekening repo
       git:
         repo: https://github.com/aldo-f/toerekening.git
         dest: /home/aldo/dev/06-apps-toerekening
         version: main
-        update: yes # Changed from force: yes
-
-    - name: Copy Toerekening template files
-      copy:
-        src: "{{ item.src }}"
-        dest: "{{ item.dest }}"
-      loop:
-        - { src: "{{ template_dir }}/apps/toerekening/docker-compose.yml", dest: "/home/aldo/dev/06-apps-toerekening/docker-compose.yml" }
-        - { src: "{{ template_dir }}/apps/toerekening/Dockerfile", dest: "/home/aldo/dev/06-apps-toerekening/Dockerfile" }
-        - { src: "{{ template_dir }}/apps/toerekening/package.json", dest: "/home/aldo/dev/06-apps-toerekening/package.json" }
-        - { src: "{{ template_dir }}/apps/toerekening/package-lock.json", dest: "/home/aldo/dev/06-apps-toerekening/package-lock.json" }
+        force: yes
 
     - name: Build and start Toerekening via Docker Compose
       command: docker-compose up -d --build
       args:
         chdir: /home/aldo/dev/06-apps-toerekening
-
-    - name: Setup FreelLmapi
-      block:
-        - name: Clone FreelLmapi repo
-          git:
-            repo: https://github.com/aldo-f/freellmapi.git
-            dest: /home/aldo/dev/02-ai-freellm
-            version: upstream
-            update: yes
-
-        - name: Install FreelLmapi Node.js dependencies
-          shell: |
-            cd /home/aldo/dev/02-ai-freellm
-            npm ci
-          args:
-            executable: /bin/bash
-
-        - name: Build FreelLmapi
-          shell: |
-            cd /home/aldo/dev/02-ai-freellm
-            npm run build
-          args:
-            executable: /bin/bash
-            creates: /home/aldo/dev/02-ai-freellm/server/dist
-
-        - name: Deploy FreelLmapi via Docker Compose
-          shell: docker-compose up -d
-          args:
-            executable: /bin/bash
-            chdir: /home/aldo/dev/02-ai-freellm
-      when: "'freellmapi' in tools_sentries or true"
