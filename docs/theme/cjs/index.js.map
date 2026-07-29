@@ -1,0 +1,1 @@
+{"version":3,"file":"index.js","sources":["../../src/index.ts"],"sourcesContent":["import type { Plugin } from '@docusaurus/types';\n\nexport default function aldoFTheme(): Plugin {\n  return {\n    name: 'aldo-f-docusaurus-theme',\n  };\n}\n"],"names":[],"mappings":";;;;AAEc,SAAU,UAAU,GAAA;IAChC,OAAO;AACL,QAAA,IAAI,EAAE,yBAAyB;KAChC,CAAC;AACJ;;;;"}
