@@ -22,6 +22,7 @@
       - hermes
       - omo
       - opencode
+      - mem0
 
   pre_tasks:
     - name: Detect system RAM in MB
@@ -148,3 +149,41 @@
             executable: /bin/bash
             chdir: /home/aldo/dev/02-ai-freellm
       when: "'freellmapi' in tools_sentries or true"
+
+    - name: Setup mem0 memory backend
+      block:
+        - name: Install mem0 pip packages
+          pip:
+            name:
+              - mem0ai
+              - qdrant-client
+            state: present
+            executable: /home/aldo/.hermes/hermes-agent/venv/bin/python3 -m pip
+
+        - name: Ensure Ollama embedding model is available
+          command: ollama pull nomic-embed-text
+          become: false
+          register: ollama_pull
+          changed_when: "'pulling' in ollama_pull.stdout"
+          failed_when: false
+
+        - name: Ensure Qdrant storage directory exists
+          file:
+            path: /home/aldo/.hermes/mem0_qdrant
+            state: directory
+            owner: aldo
+            group: aldo
+            mode: "0755"
+
+        - name: Pre-initialize Qdrant collection
+          script: scripts/setup-mem0.sh
+          become: false
+          register: mem0_setup
+          changed_when: "'Created' in mem0_setup.stdout or 'Recreated' in mem0_setup.stdout"
+
+        - name: Enable mem0 in Hermes config
+          command: hermes config set memory.provider mem0
+          become: false
+          register: mem0_config
+          changed_when: "'Set' in mem0_config.stdout"
+      when: "'mem0' in tools_sentries"

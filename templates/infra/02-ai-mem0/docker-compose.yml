@@ -1,0 +1,21 @@
+services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant-data:/data
+    environment:
+      - QDRANT__ALLOW_EMPTY_PAGE_SIZE=true
+      - MALLOC_CONF=retain:false
+    restart: unless-stopped
+    networks:
+      - traefik_net
+
+networks:
+  traefik_net:
+    external: true
+
+volumes:
+  qdrant-data:
