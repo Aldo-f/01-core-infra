@@ -57,9 +57,8 @@
       command: npm install -g opencode-ai
 
     - name: Ensure Traefik network exists
-      docker_network:
-        name: "{{ traefik_network }}"
-        state: present
+      command: docker network create {{ traefik_network }}
+      ignore_errors: true
 
     - name: Check if node_modules exists for FreelLmapi
       stat:
