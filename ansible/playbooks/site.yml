@@ -20,7 +20,6 @@
       - lmstudio
       - fish
       - hermes
-      - opencode
 
   pre_tasks:
     - name: Detect system RAM in MB
@@ -50,27 +49,25 @@
           - nodejs
           - npm
           - tree
+          - fish # Ensure fish is always present, as discussed
         state: present
         update_cache: yes
 
-    - name: Install opencode via npm
-      command: npm install -g opencode-ai
 
-    - name: Create Traefik network if it doesn't exist
-      command: docker network create {{ traefik_network }}
-      ignore_errors: true
 
-    - name: Remove Toerekening directory if exists (to ensure clean clone)
-      file:
-        path: "/home/aldo/dev/06-apps-toerekening"
-        state: absent
+    - name: Ensure Traefik network exists
+      community.docker.docker_network:
+        name: "{{ traefik_network }}"
+        state: present
+
+
 
     - name: Clone Toerekening repo
       git:
         repo: https://github.com/aldo-f/toerekening.git
         dest: /home/aldo/dev/06-apps-toerekening
         version: main
-        force: yes
+        update: yes # Changed from force: yes
 
     - name: Copy Toerekening template files
       copy:
