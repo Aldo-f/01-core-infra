@@ -20,7 +20,7 @@
       - lmstudio
       - fish
       - hermes
-      - omo
+      - opencode
 
   pre_tasks:
     - name: Detect system RAM in MB
@@ -35,11 +35,11 @@
     - name: Select Ollama model based on RAM
       set_fact:
         ollama_model: >-
-          {
+          {{
             'qwen3:4b' if ram_mb < 12000
             else 'qwen3:8b' if ram_mb < 20000
             else 'qwen3.6:27b-q4_K_M'
-          }
+          }}
 
   tasks:
     - name: Install Docker, Docker Compose, Node.js, npm, and tree
@@ -50,41 +50,47 @@
           - nodejs
           - npm
           - tree
+          - fish
         state: present
         update_cache: yes
 
-    - name: Install omo via npm
-      command: npm install -g omo
-      become: true
-
-    - name: Ensure opencode (opencode-ai) is installed via npm
+    - name: Install opencode via npm
       command: npm install -g opencode-ai
-      become: true
 
-    - name: Create opencode config directory
-      file:
-        path: /home/aldo/.config/opencode
+    - name: Ensure Traefik network exists
+      ansible.builtin.command: docker network create {{ traefik_network }}
+      ignore_errors: true
+      failed_when: false
+
+    - name: Ensure Traefik directory exists
+      ansible.builtin.file:
+        path: /home/aldo/dev/04-network-traefik
         state: directory
         mode: '0755'
 
-    - name: Set up opencode custom provider for freellm
-      copy:
-        dest: /home/aldo/.config/opencode/config.yaml
-        content: |
-          providers:
-            - name: freellm
-              type: openai
-              base_url: http://192.168.0.5:3001/v1
-              api_key: ""
-              model: auto
+    - name: Copy Traefik template configuration files
+      ansible.builtin.copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: '0644'
+        # owner and group omitted – files will be owned by the current user (host UID/GID)
+      loop:
+        - { src: "{{ template_dir }}/infra/04-network-traefik/docker-compose.yml", dest: "/home/aldo/dev/04-network-traefik/docker-compose.yml" }
+        - { src: "{{ template_dir }}/infra/04-network-traefik/traefik.yml", dest: "/home/aldo/dev/04-network-traefik/traefik.yml" }
+        - { src: "{{ template_dir }}/infra/04-network-traefik/routes.yml", dest: "/home/aldo/dev/04-network-traefik/routes.yml" }
 
-    - name: Ensure Traefik network exists
-      command: docker network create {{ traefik_network }}
+    - name: Create Traefik external volume if it doesn't exist
+      ansible.builtin.command: docker volume create 04-network-traefik_letsencrypt
       ignore_errors: true
 
-    - name: Remove Toerekening directory if exists (to ensure clean clone)
+    - name: Start Traefik reverse proxy
+      ansible.builtin.command: docker compose up -d
+      args:
+        chdir: /home/aldo/dev/04-network-traefik
+
+    - name: Ensure Toerekening directory does not exist (to ensure clean clone)
       file:
-        path: "/home/aldo/dev/06-apps-toerekening"
+        path: /home/aldo/dev/06-apps-toerekening
         state: absent
 
     - name: Clone Toerekening repo
@@ -92,20 +98,10 @@
         repo: https://github.com/aldo-f/toerekening.git
         dest: /home/aldo/dev/06-apps-toerekening
         version: main
-        force: yes
-
-    - name: Copy Toerekening template files
-      copy:
-        src: "{{ item.src }}"
-        dest: "{{ item.dest }}"
-      loop:
-        - { src: "{{ template_dir }}/apps/toerekening/docker-compose.yml", dest: "/home/aldo/dev/06-apps-toerekening/docker-compose.yml" }
-        - { src: "{{ template_dir }}/apps/toerekening/Dockerfile", dest: "/home/aldo/dev/06-apps-toerekening/Dockerfile" }
-        - { src: "{{ template_dir }}/apps/toerekening/package.json", dest: "/home/aldo/dev/06-apps-toerekening/package.json" }
-        - { src: "{{ template_dir }}/apps/toerekening/package-lock.json", dest: "/home/aldo/dev/06-apps-toerekening/package-lock.json" }
+        update: yes
 
     - name: Build and start Toerekening via Docker Compose
-      command: docker-compose up -d --build
+      command: docker compose -f {{ template_dir }}/apps/toerekening/docker-compose.yml up -d --build
       args:
         chdir: /home/aldo/dev/06-apps-toerekening
 
@@ -118,18 +114,12 @@
             version: upstream
             update: yes
 
-        - name: Check if node_modules exists for FreelLmapi
-          stat:
-            path: /home/aldo/dev/02-ai-freellm/node_modules
-          register: freellmapi_node_modules
-
         - name: Install FreelLmapi Node.js dependencies
           shell: |
             cd /home/aldo/dev/02-ai-freellm
             npm ci
           args:
             executable: /bin/bash
-          when: not freellmapi_node_modules.stat.exists
 
         - name: Build FreelLmapi
           shell: |
@@ -140,8 +130,60 @@
             creates: /home/aldo/dev/02-ai-freellm/server/dist
 
         - name: Deploy FreelLmapi via Docker Compose
-          shell: docker-compose up -d
+          shell: docker compose up -d
           args:
             executable: /bin/bash
             chdir: /home/aldo/dev/02-ai-freellm
       when: "'freellmapi' in tools_sentries or true"
+
+    # HERMES WEBUI DEPLOYMENT TASKS
+    - name: Ensure hermes-webui directory exists
+      file:
+        path: /home/aldo/dev/02-ai-hermes-webui
+        state: directory
+      become: false
+
+    - name: Clone or update hermes-webui repo
+      git:
+        repo: https://github.com/nesquena/hermes-webui.git
+        dest: /home/aldo/dev/02-ai-hermes-webui
+        version: master
+        force: yes
+      become: false
+
+    - name: Ensure start.sh is executable
+      file:
+        path: /home/aldo/dev/02-ai-hermes-webui/start.sh
+        mode: '0755'
+      become: false
+
+    - name: Deploy hermes-webui systemd service
+      copy:
+        dest: /etc/systemd/system/app-hermes-webui.service
+        content: |
+          [Unit]
+          Description=Hermes WebUI Service
+          After=network.target
+
+          [Service]
+          Environment=HERMES_WEBUI_HOST=0.0.0.0
+          ExecStart=/home/aldo/dev/02-ai-hermes-webui/start.sh
+          WorkingDirectory=/home/aldo/dev/02-ai-hermes-webui
+          Restart=always
+          User=aldo
+
+          [Install]
+          WantedBy=multi-user.target
+        owner: root
+        group: root
+        mode: '0644'
+      notify:
+        - Reload systemd
+        - Enable and start hermes-webui
+
+  handlers:
+    - name: Reload systemd
+      command: systemctl daemon-reload
+
+    - name: Enable and start hermes-webui
+      command: systemctl enable --now app-hermes-webui.service
