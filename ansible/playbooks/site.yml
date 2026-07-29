@@ -57,6 +57,27 @@
       command: npm install -g omo
       become: true
 
+    - name: Ensure opencode (opencode-ai) is installed via npm
+      command: npm install -g opencode-ai
+      become: true
+
+    - name: Create opencode config directory
+      file:
+        path: /home/aldo/.config/opencode
+        state: directory
+        mode: '0755'
+
+    - name: Set up opencode custom provider for freellm
+      copy:
+        dest: /home/aldo/.config/opencode/config.yaml
+        content: |
+          providers:
+            - name: freellm
+              type: openai
+              base_url: http://192.168.0.5:3001/v1
+              api_key: ""
+              model: auto
+
     - name: Ensure Traefik network exists
       command: docker network create {{ traefik_network }}
       ignore_errors: true
