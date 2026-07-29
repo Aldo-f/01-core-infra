@@ -58,9 +58,8 @@
       become: true
 
     - name: Ensure Traefik network exists
-      docker_network:
-        name: "{{ traefik_network }}"
-        state: present
+      command: docker network create {{ traefik_network }}
+      ignore_errors: true
 
     - name: Remove Toerekening directory if exists (to ensure clean clone)
       file:
