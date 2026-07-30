@@ -30,8 +30,8 @@ jobs:
 
       - name: Check for forbidden hardcoded paths
         run: |
-          if grep -R "/home/aldo/dev/01-core-infra" .; then
-            echo "::error::Hardcoded path /home/aldo/dev/01-core-infra found in files above"
+          if grep -R "__CORE_INFRA__" .; then
+            echo "::error::Hardcoded path __CORE_INFRA__ found in files above"
             exit 1
           fi
           echo "No hardcoded paths found."
