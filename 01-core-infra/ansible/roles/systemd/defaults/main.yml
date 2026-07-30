@@ -10,4 +10,4 @@ systemd_helper_path: "/usr/local/bin/app-deploy-systemd"
 
 systemd_template_dir: "{{ template_dir }}/systemd"
 
-sudoers_template: "{{ template_dir }}/systemd/01-core-infra-deploy.sudoers"
+sudoers_template: "01-core-infra-deploy.sudoers"
