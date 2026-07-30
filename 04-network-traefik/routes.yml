@@ -63,6 +63,22 @@ http:
       middlewares:
         - https-redirect
 
+    nextcloud:
+      rule: "Host(`cloud.aldof.duckdns.org`)"
+      entryPoints:
+        - websecure
+      service: nextcloud
+      tls:
+        certResolver: myresolver
+
+    nextcloud-http:
+      rule: "Host(`cloud.aldof.duckdns.org`)"
+      entryPoints:
+        - web
+      middlewares:
+        - https-redirect
+      service: nextcloud
+
   services:
     freellmapi:
       loadBalancer:
@@ -76,6 +92,10 @@ http:
       loadBalancer:
         servers:
           - url: "http://192.168.0.5:4096"
+    nextcloud:
+      loadBalancer:
+        servers:
+          - url: "http://nextcloud:80"
 
   middlewares:
     https-redirect:

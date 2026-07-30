@@ -52,3 +52,18 @@
 - **Ansible sudo** – configure password‑less sudo or run the playbook as root.
 
 For a deeper dive into each subsystem, see the linked documentation files.
+
+## For AI coding agents
+
+- **Quick run/test commands (one-liners):**
+   - `cd 01-core-infra && ./install.sh` — bootstrap infra and sentries.
+   - `cd 02-ai-hermes-webui && python3 bootstrap.py && ./ctl.sh start` — start Hermes WebUI.
+   - `cd 02-ai-freellm && npm install && npm run dev` — start FreeLLM router (dev).
+   - `cd 02-ai-llm-infra-sync && bun install && bun run src/index.ts` — run infra-sync CLI.
+
+- **Preflight checks:** verify required env files (`.env`), check port availability (e.g. `8787`), confirm Docker group membership, and consult `01-core-infra/install.sh` before performing system-level changes.
+
+- **Agent surfaces & skills:** project-specific agent guidance and skills live in project AGENTS.md files: `01-core-infra/AGENTS.md`, `02-ai-hermes-webui/AGENTS.md`, and `02-ai-llm-infra-sync/AGENTS.md`. Hermes-specific architecture and skill locations are documented in `02-ai-hermes-webui/ARCHITECTURE.md`.
+
+- **Where to look first:** `ansible/`, `01-core-infra/templates/`, `02-ai-hermes-webui/bootstrap.py`, `02-ai-hermes-webui/ctl.sh`, and project `package.json` / `pyproject.toml` files for exact scripts.
+
