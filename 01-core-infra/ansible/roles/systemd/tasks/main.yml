@@ -1,0 +1,28 @@
+# tasks/main.yml
+- name: Deploy systemd helper script
+  copy:
+    src: app-deploy-systemd
+    dest: "{{ systemd_helper_path }}"
+    owner: root
+    group: root
+    mode: 0755
+  notify: Reload systemd
+
+- name: Install sudoers file
+  copy:
+    src: "{{ sudoers_template }}"
+    dest: "{{ sudoers_file }}"
+    owner: root
+    group: root
+    mode: 0440
+  notify: Reload sudoers
+
+- name: Deploy systemd service unit files
+  copy:
+    src: "{{ systemd_template_dir }}/app-{{ item | replace('app-', '') }}.service"
+    dest: "/etc/systemd/system/app-{{ item | replace('app-', '') }}.service"
+    owner: root
+    group: root
+    mode: 0644
+  loop: "{{ systemd_services }}"
+  notify: Reload systemd

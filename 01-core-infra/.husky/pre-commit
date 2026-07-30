@@ -1,0 +1,41 @@
+#!/bin/bash
+set -euo pipefail
+
+# Define the template path relative to repo root
+TEMPLATE="templates/cron/01-core-infra.cron"
+
+ISSUES=0
+
+echo "=== Pre-commit cron template verification ==="
+
+# Check template has placeholders
+if ! grep -q "__HOME__" "$TEMPLATE"; then
+    echo "❌ FAIL: Missing __HOME__ placeholder"
+    ISSUES=$((ISSUES + 1))
+fi
+
+if ! grep -q "__USER__" "$TEMPLATE"; then
+    echo "❌ FAIL: Missing __USER__ placeholder"
+    ISSUES=$((ISSUES + 1))
+fi
+
+if ! grep -q "__CORE_INFRA__" "$TEMPLATE"; then
+    echo "❌ FAIL: Missing __CORE_INFRA__ placeholder"
+    ISSUES=$((ISSUES + 1))
+fi
+
+# Check no old hardcoded runtime paths remain in template
+if grep -qE '/home/[^/]+/dev/01-core-infra' "$TEMPLATE" 2>/dev/null; then
+    echo "❌ FAIL: Detected hardcoded runtime path in template"
+    ISSUES=$((ISSUES + 1))
+fi
+
+echo "
+=== Pre-commit hook summary ==="
+if [ $ISSUES -eq 0 ]; then
+    echo "✅ All checks passed " | tee -a ./precommit.log
+    exit 0
+else
+    echo "❌ $ISSUES issue(s) found " | tee -a ./precommit.log
+    exit 1
+fi

@@ -1,0 +1,37 @@
+---
+- name: Rebuild development environment
+  hosts: localhost
+  connection: local
+  become: true
+  gather_facts: true
+  vars:
+    script_dir: "__CORE_INFRA__"
+    template_dir: "{{ script_dir }}/templates"
+    repo_manifest: "{{ template_dir }}/repos.manifest.jsonc"
+    ollama_api_key_file: "__HOME__/.config/ollama/api_key"
+    container_test: false
+    traefik_network: "traefik_net"
+    __HOME__: "/home/aldo"
+    dev_home: "__HOME__/dev"
+    infra_dir: "__CORE_INFRA__"
+    ansible_user: aldo
+    tools_sentries:
+      - bun
+
+  pre_tasks:
+    - name: Ensure bun binary is in system PATH
+      file:
+        src: "__HOME__/.bun/bin/bun"
+        dest: "/usr/local/bin/bun"
+        state: link
+        force: yes
+      become: true
+
+  roles:
+    - "base"
+    - "tools"
+    - "templates"
+    - "systemd"
+    - "cron"
+    - "mesh_sync"
+

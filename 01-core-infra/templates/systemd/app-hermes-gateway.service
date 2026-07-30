@@ -1,0 +1,4 @@
+[Unit]
+Description=Hermes Gateway
+[Service]
+ExecStart=/bin/true

@@ -1,0 +1,50 @@
+---
+- name: Get container images
+  hosts: localhost
+  become: true
+  gather_facts: no
+  vars:
+    dev_home: "/home/aldo/dev"
+    infra_dir: "{{ dev_home }}/01-core-infra"
+    template_dir: "{{ infra_dir }}/templates"
+    infra_templates: "{{ template_dir }}/infra"
+    repo_manifest: "{{ infra_templates }}/repos.manifest.jsonc"
+    ollama_api_key_file: "/home/aldo/.config/ollama/api_key"
+
+  pre_tasks:
+    - name: Detect system RAM in MB
+      command: awk '/MemTotal/ {print int($2/1024)}' /proc/meminfo
+      register: ram_output
+      changed_when: false
+
+    - name: Set ram_mb fact
+      set_fact:
+        ram_mb: "{{ ram_output.stdout | int }}"
+
+    - name: Select Ollama model based on RAM
+      set_fact:
+        ollama_model: >-
+          {
+            'qwen3:4b' if ram_mb < 12000
+            else 'qwen3:8b' if ram_mb < 20000
+            else 'qwen3.6:27b-q4_K_M'
+          }
+
+  tasks:
+    - name: Pull LiteLLM container image
+      docker_image:
+        name: docker.litellm.ai/berriai/litellm:latest
+        source: pull
+      register: litellm_image
+
+    - name: Report image pull status
+      debug:
+        msg: "LiteLLM image pulled successfully: {{ litellm_image.image.id }}"
+
+  roles:
+    - base
+    - tools
+    - templates
+    - systemd
+    - cron
+    - mesh_sync

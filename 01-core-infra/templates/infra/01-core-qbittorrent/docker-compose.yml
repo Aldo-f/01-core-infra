@@ -1,0 +1,4 @@
+services:
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    volumes: ['./config:/config', './downloads:/downloads']

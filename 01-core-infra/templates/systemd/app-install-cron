@@ -1,0 +1,28 @@
+#!/bin/bash
+# app-install-cron — privileged helper voor 01-core-infra cron-deploy.
+# Krijgt passwordless sudo via /etc/sudoers.d/01-core-infra-deploy.
+# Installeert de cron-file naar /etc/cron.d/ (idempotent).
+set -euo pipefail
+
+REAL_HOME="${SUDO_USER:+$(getent passwd "$SUDO_USER" | cut -d: -f6)}"
+REAL_HOME="${REAL_HOME:-$HOME}"
+SRC="$REAL_HOME/dev/01-core-infra/templates/cron/01-core-infra.cron"
+DEST="/etc/cron.d/01-core-infra"
+
+# Replace placeholders with actual values
+if [ -f "$SRC" ]; then
+    # Check if __HOME__ placeholder exists
+    if grep -q "__HOME__" "$SRC"; then
+        USER=$(id -un "$SUDO_USER" 2>/dev/null || echo "$USER")
+        CORE_INFRA="$REAL_HOME/dev/01-core-infra"
+        sed -i "s|__HOME__|$USER|g; s|__USER__|\\$USER|g; s|__CORE_INFRA__|$CORE_INFRA|g" "$SRC"
+    fi
+fi
+
+if [ ! -f "$SRC" ]; then
+  echo "Geen cron-template op $SRC"
+  exit 0
+fi
+
+install -m 0644 "$SRC" "$DEST"
+echo "Cron geïnstalleerd: $DEST"

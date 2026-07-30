@@ -1,0 +1,43 @@
+#!/bin/bash
+# Ansible Vault Master Key Setup Script
+# This script creates a secure master key file for Ansible Vault
+# Run ONLY ONCE to initialize your vault security
+
+echo "=================================================="
+echo " HERMES VAULT MASTER KEY SETUP"
+echo "=================================================="
+echo ""
+echo "WARNING: This will create a master key file at:"
+echo "  $HOME/dev/01-core-infra/vaults/master.key"
+echo ""
+echo "FILES WITH THIS PASSWORD WILL ALWAYS BE ENCRYPTED WITH:"
+echo "  ansible-vault commands using --vault-password-file $HOME/dev/01-core-infra/vaults/master.key"
+echo ""
+echo "SECURITY WARNING:"
+echo "  - NEVER commit this file to git"
+echo "  - NEVER share this file"
+echo "  - RESTRICT ACCESS: chmod 600 $HOME/dev/01-core-infra/vaults/master.key"
+echo ""
+echo "Press ENTER to continue, or Ctrl+C to abort"
+read -r
+
+# Generate a strong random password (32+ characters)
+MASTER_PASSWORD=$(openssl rand -base64 32 | tr -d '/+=' | cut -c1-32)
+echo "$MASTER_PASSWORD" > __CORE_INFRA__/vaults/master.key
+
+# Set strict permissions
+chmod 600 __CORE_INFRA__/vaults/master.key
+chown aldo:aldo __CORE_INFRA__/vaults/master.key
+
+echo ""
+echo "✅ MASTER KEY CREATED SUCCESSFULLY"
+echo "   Location: $HOME/dev/01-core-infra/vaults/master.key"
+echo "   Permissions: -rw------- (600)"
+echo "   Password strength: 32-character random string"
+echo ""
+echo "NEXT STEPS:"
+echo "1. Encrypt credentials: ansible-vault encrypt dev/01-core-infra/vaults/hermes-credentials.yml --vault-password-file $HOME/dev/01-core-infra/vaults/master.key"
+echo "2. Add master.key to .gitignore"
+echo "3. Create GitHub Actions secrets:"
+echo "   - ANSIBLE_VAULT_MASTER_KEY (value = YOUR_PASSWORD_FROM_THIS_FILE)"
+echo "   - MASTER_CREDENTIALS_ENCRYPTED (value = BASE64_ENCODED_PAYLOAD)"

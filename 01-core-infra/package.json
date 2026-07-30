@@ -1,0 +1,27 @@
+{
+  "name": "01-core-infra",
+  "version": "1.0.0",
+  "description": "One-command install: curl -o- https://raw.githubusercontent.com/Aldo-f/01-core-infra/main/install.sh | bash",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Aldo-f/01-core-infra.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Aldo-f/01-core-infra/issues"
+  },
+  "homepage": "https://github.com/Aldo-f/01-core-infra#readme",
+  "dependencies": {
+    "lazycodex-ai": "^4.19.3"
+  }
+}

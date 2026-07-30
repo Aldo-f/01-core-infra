@@ -1,0 +1,9 @@
+- name: Deploy Hermes credentials template
+  copy:
+    src: "{{ playbook_dir }}/templates/infra/hermes/auth.json.j2"
+    dest: "{{ ansible_hermes_home }}/auth.json"
+    owner: aldo
+    group: aldo
+    mode: "0600"
+  no_log: true
+  when: ansible_hermes_home is defined

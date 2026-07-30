@@ -1,0 +1,27 @@
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    python3-venv \
+    git \
+    curl \
+    sudo \
+    unzip \
+    zstd \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install ansible --break-system-packages
+
+RUN id -u aldo >/dev/null 2>&1 || (useradd -m -u 1000 -o -s /bin/bash aldo && \
+    echo "aldo ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers)
+
+USER root
+WORKDIR __CORE_INFRA__
+
+COPY --chown=aldo:aldo ansible/ __CORE_INFRA__/ansible/
+
+CMD ["/bin/bash"]

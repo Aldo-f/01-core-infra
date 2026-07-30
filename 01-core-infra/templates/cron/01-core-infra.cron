@@ -1,0 +1,11 @@
+# 01-core-infra cron jobs — beheerd door install.sh (niet handmatig wijzigen).
+# Pad: /etc/cron.d/01-core-infra
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+HOME=__HOME__
+
+# Healthcheck elke 15 minuten
+*/15 * * * * __USER__ __CORE_INFRA__/healthcheck.sh >> __CORE_INFRA__/logs/health-cron.log 2>&1
+
+# Backup dagelijks om 03:00
+0 3 * * * __USER__ __CORE_INFRA__/backup.sh >> __CORE_INFRA__/logs/backup-cron.log 2>&1

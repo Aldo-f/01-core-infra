@@ -1,0 +1,93 @@
+# tasks/main.yml
+
+# --- Git profile setup ---
+- name: Configure git user.email
+  git_config:
+    name: user.email
+    value: aldo.fieuw@gmail.com
+
+- name: Configure git user.name
+  git_config:
+    name: user.name
+    value: Aldo
+
+# --- Shell PATH configuration for bash ---
+- name: Ensure bash config has PATH for curl-installed tools
+  lineinfile:
+    path: /home/{{ ansible_user }}/.bashrc
+    line: 'export PATH="$HOME/.bun/bin:$HOME/fvm/bin:$HOME/.lmstudio/bin:$HOME/.local/bin:$HOME/.opencode/bin:$PATH"'
+    create: yes
+    insertafter: EOF
+
+# --- Shell PATH configuration for fish ---
+- name: Ensure fish config has PATH for curl-installed tools
+  lineinfile:
+    path: /home/{{ ansible_user }}/.config/fish/config.fish
+    line: 'set -Ux PATH $HOME/.bun/bin $HOME/fvm/bin $HOME/.lmstudio/bin $HOME/.local/bin $HOME/.opencode/bin $PATH'
+    create: yes
+    insertafter: EOF
+
+# --- Ollama API key handling ---
+- name: Check Ollama API key file exists
+  stat:
+    path: "{{ ollama_api_key_file }}"
+  register: ollama_key_file
+
+- name: Export Ollama API key from file
+  set_fact:
+    ollama_api_key: "{{ lookup('file', ollama_api_key_file) | trim }}"
+  when: ollama_key_file.stat.exists
+
+- name: Set Ollama model based on RAM
+  set_fact:
+    ollama_model: "{{ 'qwen3:4b' if ram_mb < 12000 else 'qwen3:8b' if ram_mb < 20000 else 'qwen3.6:27b-q4_K_M' }}"
+  when: ollama_key_file.stat.exists
+
+- name: Pull Ollama model
+  command: ollama pull "{{ ollama_model }}"
+  when: ollama_key_file.stat.exists and ollama_model is defined
+
+# --- RAM detection ---
+- name: Detect system RAM in MB
+  command: awk '/MemTotal/ {print int($2/1024)}' /proc/meminfo
+  register: ram_output
+  changed_when: false
+
+- name: Set ram_mb fact
+  set_fact:
+    ram_mb: "{{ ram_output.stdout | int }}"
+
+# --- Git global config ---
+- name: Set git global user.email
+  git_config:
+    name: user.email
+    value: aldo.fieuw@gmail.com
+  become: true
+
+- name: Set git global user.name
+  git_config:
+    name: user.name
+    value: Aldo
+  become: true
+
+# --- Make scripts executable ---
+- name: Make install.sh executable
+  file:
+    path: "{{ infra_dir }}/install.sh"
+    mode: '0755'
+
+- name: Make backup.sh executable
+  file:
+    path: "{{ infra_dir }}/backup.sh"
+    mode: '0755'
+
+- name: Verify llm‑infra‑sync status after deployment
+  command: bun run src/status.ts
+  args:
+    chdir: "{{ __HOME__ }}/dev/02-ai-llm-infra-sync"
+  register: sync_status
+  changed_when: false
+  failed_when: sync_status.rc != 0
+  ignore_errors: false
+  # Abort the play if sync could not produce a status report
+  when: true

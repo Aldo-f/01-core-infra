@@ -1,0 +1,16 @@
+[Unit]
+Description=OpenCode Web UI
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=aldo
+Group=aldo
+ExecStart=/usr/local/bin/opencode web --mdns
+Restart=unless-stopped
+RestartSec=5
+WorkingDirectory=/home/aldo
+
+[Install]
+WantedBy=multi-user.target

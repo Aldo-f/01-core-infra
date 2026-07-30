@@ -1,0 +1,4 @@
+# defaults/main.yml
+cron_template: "{{ infra_templates }}/cron/01-core-infra.cron"
+target_cron_file: "/etc/cron.d/01-core-infra"
+cron_helper_path: "/usr/local/bin/app-install-cron"

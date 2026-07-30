@@ -1,0 +1,4 @@
+# Passwordless sudo voor de 01-core-infra deploy-helpers.
+# Hiermee draait `./install.sh` unattended (systemd enable/start + cron zonder wachtwoord).
+aldo ALL=(root) NOPASSWD: /usr/local/bin/app-deploy-systemd
+aldo ALL=(root) NOPASSWD: /usr/local/bin/app-install-cron

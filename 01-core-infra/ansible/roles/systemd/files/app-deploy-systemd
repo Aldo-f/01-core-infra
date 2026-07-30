@@ -1,0 +1,28 @@
+#!/bin/bash
+set -euo pipefail
+
+# /usr/local/bin/app-deploy-systemd - deployed by 01-core-infra ansible
+# This helper runs as root via sudoers (NOPASSWD for aldo)
+
+SYSTEMD_DIR="/etc/systemd/system"
+TEMPLATE_DIR="__CORE_INFRA__/templates/systemd"
+
+# Ensure template directory exists
+[ -d "$TEMPLATE_DIR" ] || exit 0
+
+# Copy all app-*.service files to /etc/systemd/system/
+for service in "$TEMPLATE_DIR"/app-*.service; do
+  [ -e "$service" ] || continue
+  cp "$service" "$SYSTEMD_DIR/"
+done
+
+# Reload systemd
+systemctl daemon-reload
+
+# Enable and start all app-* services
+for service in "$SYSTEMD_DIR"/app-*.service; do
+  [ -e "$service" ] || continue
+  service_name=$(basename "$service")
+  systemctl enable "$service_name" 2>/dev/null || true
+  systemctl start "$service_name" 2>/dev/null || true
+done

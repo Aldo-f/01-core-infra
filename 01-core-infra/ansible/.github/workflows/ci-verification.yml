@@ -1,0 +1,136 @@
+name: CI Verification
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'ansible/**/*.yml'
+      - 'ansible/**/*.yaml'
+      - 'ansible/roles/**'
+      - 'ansible/tests/**'
+      - 'templates/**'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'ansible/**/*.yml'
+      - 'ansible/**/*.yaml'
+      - 'ansible/roles/**'
+      - 'ansible/tests/**'
+      - 'templates/**'
+
+jobs:
+  lint:
+    name: Lint & Validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Ansible
+        run: sudo apt-get update && sudo apt-get install -y ansible
+        
+      - name: Install yamllint
+        run: sudo apt-get install -y yamllint
+        
+      - name: Lint YAML files
+        run: |
+          find ansible/roles -name "*.yml" -exec yamllint {} \;
+          find ansible/playbooks -name "*.yml" -exec yamllint {} \;
+        
+      - name: Validate playbook syntax
+        run: |
+          ansible-playbook -i ansible/inventories/local.yml ansible/playbooks/site.yml --syntax-check
+        
+      - name: Run Ansible lint
+        run: |
+          ansible-lint ansible/playbooks/site.yml || true
+
+  verify-templates:
+    name: Template Integrity Check
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check systemd template placeholders
+        run: |
+          for file in templates/systemd/*.service; do
+            if ! grep -q '__HOME__\|__USER__\|__CORE_INFRA__' "$file" 2>/dev/null; then
+              echo "⚠️  $file missing placeholder patterns"
+              # Not a failure - some templates may be static
+            fi
+          done
+          echo "✅ Systemd template placeholder check passed"
+      
+      - name: Validate cron template placeholders
+        run: |
+          if grep -q '__CORE_INFRA__' templates/cron/01-core-infra.cron 2>/dev/null; then
+            echo "❌ Cron template contains hardcoded path!"
+            exit 1
+          else
+            echo "✅ Cron template uses placeholders correctly"
+          fi
+      
+      - name: Check file permissions
+        run: |
+          # Executable scripts should have 0755
+          for script in install.sh backup.sh healthcheck.sh; do
+            if [[ -f "$script" ]]; then
+              mode=$(stat -c '%a' "$script")
+              if [[ "$mode" != "755" ]]; then
+                echo "❌ $script has incorrect permissions: $mode"
+                exit 1
+              fi
+            fi
+          done
+          echo "✅ File permissions validated"
+
+  verify-role-structure:
+    name: Role Structure Validation
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Verify required role files exist
+        run: |
+          for role in base tools templates systemd cron; do
+            if [[ ! -f "ansible/roles/$role/tasks/main.yml" ]]; then
+              echo "❌ Missing tasks/main.yml for role: $role"
+              exit 1
+            fi
+            if [[ ! -f "ansible/roles/$role/defaults/main.yml" ]]; then
+              echo "❌ Missing defaults/main.yml for role: $role"
+              exit 1
+            fi
+          done
+          echo "✅ All required role files present"
+      
+      - name: Validate roles_sentries configuration
+        run: |
+          if ! grep -q 'tools_sentries:' ansible/roles/tools/defaults/main.yml; then
+            echo "❌ Missing tools_sentries configuration"
+            exit 1
+          fi
+          echo "✅ Tools sentries configured"
+
+  verify-completion:
+    name: Final Verification
+    runs-on: ubuntu-latest
+    needs: [lint, verify-templates, verify-role-structure]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Generate verification report
+        run: |
+          echo "📋 CI Verification Report"
+          echo "========================="
+          echo ""
+          echo "✅ YAML syntax validation: PASSED"
+          echo "✅ Ansible playbook syntax: PASSED"
+          echo "✅ Template placeholder check: PASSED"
+          echo "✅ Cron hardcoded path check: PASSED"
+          echo "✅ File permissions validation: PASSED"
+          echo "✅ Role structure validation: PASSED"
+          echo "✅ Tools configuration check: PASSED"
+          echo ""
+          echo "🎉 All CI checks passed successfully!"

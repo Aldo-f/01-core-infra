@@ -1,0 +1,42 @@
+tools_sentries:
+
+  node:
+    command: node -v
+  nvm:
+    command: nvm --version
+  pnpm:
+    command: pnpm -v
+  bun:
+    command: bun -v
+  fvm:
+    command: fvm -v
+  ollama:
+    command: ollama -v
+  lmstudio:
+    command: lms -v
+  fish:
+    command: fish -v
+  hermes:
+    command: hermes -v
+  opencode:
+    command: opencode -v
+  tree:
+    command: tree -v
+  tailscale:
+    command: tailscale -v
+  spec_kit:
+    command: '/home/aldo/.local/spec-kit-venv/bin/specify --version'
+  github:
+    command: "gh --version"
+  docker:
+    command: "docker -v"
+  ansible:
+    command: "ansible --version"
+  traefik:
+    command: "traefik version"
+  sqlite3:
+    command: "sqlite3 --version"
+  terraform:
+    command: "terraform -version"
+  kubectl:
+    command: "kubectl version --client"

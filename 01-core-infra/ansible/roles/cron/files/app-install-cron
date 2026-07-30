@@ -1,0 +1,24 @@
+#!/bin/bash
+set -euo pipefail
+
+# /usr/local/bin/app-install-cron - deployed by 01-core-infra ansible
+# Replaces __HOME__, __USER__, __CORE_INFRA__ placeholders in cron template
+
+CRON_TEMPLATE="__CORE_INFRA__/templates/cron/01-core-infra.cron"
+TARGET_CRON="/etc/cron.d/01-core-infra"
+
+HOME_DIR="/home/aldo"
+USER="aldo"
+CORE_INFRA="__CORE_INFRA__"
+
+# Replace placeholders
+sed -e "s|__HOME__|$HOME_DIR|g" \
+    -e "s|__USER__|$USER|g" \
+    -e "s|__CORE_INFRA__|$CORE_INFRA|g" \
+    "$CRON_TEMPLATE" > "$TARGET_CRON"
+
+chmod 644 "$TARGET_CRON"
+
+# Ensure cron service is running
+systemctl enable cron 2>/dev/null || systemctl enable crond 2>/dev/null || true
+systemctl start cron 2>/dev/null || systemctl start crond 2>/dev/null || true

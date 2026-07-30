@@ -1,0 +1,25 @@
+#!/bin/bash
+# app-deploy-systemd — privileged helper voor 01-core-infra install.
+# Aangeroepen door install.sh; krijgt passwordless sudo via /etc/sudoers.d/01-core-infra-deploy.
+# Enige taak: systemd units uit ~/dev/01-core-infra/templates/systemd/ deployen.
+set -euo pipefail
+
+# Bepaal de home van de echte user (sudo-context heeft $HOME=/root)
+REAL_HOME="${SUDO_USER:+$(getent passwd "$SUDO_USER" | cut -d: -f6)}"
+REAL_HOME="${REAL_HOME:-$HOME}"
+SRC="$REAL_HOME/dev/01-core-infra/templates/systemd"
+
+if [ ! -d "$SRC" ]; then
+  echo "Geen systemd templates op $SRC"
+  exit 0
+fi
+
+cp -f "$SRC"/app-*.service /etc/systemd/system/
+systemctl daemon-reload
+for svc in "$SRC"/app-*.service; do
+  [ -e "$svc" ] || continue
+  unit=$(basename "$svc")
+  systemctl enable "$unit"
+  systemctl start "$unit"
+done
+echo "Systemd units deployed (via app-deploy-systemd)"

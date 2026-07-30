@@ -1,0 +1,80 @@
+# .gitignore for 01-core-infra monorepo root
+
+# ============================================
+# Generated runtime directories (never commit)
+# ============================================
+01-core-infra/portainer/
+01-core-infra/plex/
+01-core-infra/qbittorrent/
+01-core-infra/cockpit/
+01-core-infra/logs/
+01-core-infra/__CORE_INFRA__/
+__CORE_INFRA__/
+
+# ============================================
+# Sibling git repositories (separate projects)
+# ============================================
+02-*/
+04-*/
+06-*/
+
+# ============================================
+# Environment & secrets
+# ============================================
+.env
+.env.*
+*.env
+!.env.template
+secrets.json
+vaults/master.key
+
+# ============================================
+# Logs
+# ============================================
+logs/
+*.log
+
+# ============================================
+# Dependencies
+# ============================================
+node_modules/
+01-core-infra/node_modules/
+
+# ============================================
+# Build outputs
+# ============================================
+dist/
+build/
+01-core-infra/dist/
+01-core-infra/build/
+
+# ============================================
+# Python
+# ============================================
+__pycache__/
+*.pyc
+venv/
+.env/
+01-core-infra/__pycache__/
+01-core-infra/venv/
+01-core-infra/.env/
+
+# ============================================
+# OS files
+# ============================================
+.DS_Store
+Thumbs.db
+
+# ============================================
+# IDE files
+# ============================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ============================================
+# Git subdirectory .git files (prevent confusion)
+# ============================================
+**/.git/

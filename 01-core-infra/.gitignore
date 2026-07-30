@@ -1,0 +1,71 @@
+# .gitignore for Hermes Credentials Vault
+
+# Ansible Vault master keys (NEVER commit these)
+vaults/master.key
+vaults/.hgignore
+
+# Generated runtime files (never committed)
+../ansible/templates/auth.json
+auth.json
+
+# Environment files with secrets (NEVER commit)
+.env
+.env.*
+*.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.env/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Exclude sibling git repos (02-*, 04-*, 06-*) to prevent confusion
+#/02-*/.git/
+#/04-*/.git/
+#/06-*/.git/
+
+# Exclude any .git directories in subdirectories (except root .git)
+**/.git/
+
+# Template placeholder directory (has its own .git)
+__CORE_INFRA__/
+
+# Ansible collections cache
+.ansible/
+
+# Python virtual environment
+.test-venv/
+
+# Temp / log files
+FINAL_STATUS.md
+precommit.log
+
+# Build artifacts
+docs/theme/
+
+# Planning session files
+.omo/run-continuation/
+
+# Backup files
+*.bak
+
+# vault master key
+vaults/master.key
+dev/01-core-infra/vaults/master.key

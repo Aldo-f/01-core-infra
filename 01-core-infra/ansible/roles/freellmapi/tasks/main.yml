@@ -1,0 +1,54 @@
+- name: Update apt cache
+  apt:
+    update_cache: yes
+  become: true
+
+- name: Install Docker.io
+  apt:
+    name: docker.io
+    state: present
+  become: true
+
+- name: Add aldo to docker group
+  user:
+    name: aldo
+    groups: docker
+    append: yes
+  become: true
+
+- name: Enable and start Docker service
+  service:
+    name: docker
+    state: started
+    enabled: yes
+  become: true
+
+- name: Wait for Docker socket
+  wait_for:
+    path: /var/run/docker.sock
+    state: socket
+    timeout: 30
+  become: true
+
+- name: Clone freellmapi repository
+  shell: |
+    git clone --branch upstream https://github.com/aldo-f/freellmapi /home/aldo/dev/02-ai-freellm
+  args:
+    creates: /home/aldo/dev/02-ai-freellm/server/package.json
+
+- name: Install dependencies and build freellmapi
+  shell: |
+    cd /home/aldo/dev/02-ai-freellm
+    npm ci
+    npm run build
+  args:
+    creates: /home/aldo/dev/02-ai-freellm/server/dist
+  when: "'freellmapi' in tools_sentries"
+
+- name: Deploy freellmapi service
+  shell: |
+    cd /home/aldo/dev/02-ai-freellm
+    docker-compose up -d
+  args:
+    creates: /home/aldo/dev/02-ai-freellm/server/dist
+  when: "'freellmapi' in tools_sentries"
