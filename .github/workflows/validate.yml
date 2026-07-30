@@ -1,0 +1,66 @@
+name: CI Validation
+
+on:
+  push:
+    branches: [ "*" ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install validation tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y yamllint ansible-lint shellcheck
+
+      - name: YAMLLint all YAML files
+        run: |
+          find . -type f \( -name "*.yml" -o -name "*.yaml" \) -print0 | xargs -0 yamllint
+
+      - name: Ansible-lint playbooks and roles
+        run: |
+          find 01-core-infra/ansible -type f \( -name "*.yml" -o -name "*.yaml" \) -print0 | xargs -0 ansible-lint
+
+      - name: ShellCheck scripts
+        run: |
+          find . -type f -name "*.sh" -print0 | xargs -0 shellcheck
+
+      - name: Check for forbidden hardcoded paths
+        run: |
+          if grep -R "/home/aldo/dev/01-core-infra" .; then
+            echo "::error::Hardcoded path /home/aldo/dev/01-core-infra found in files above"
+            exit 1
+          fi
+          echo "No hardcoded paths found."
+
+      - name: Verify placeholders in cron templates
+        run: |
+          missing=0
+          for file in 01-core-infra/templates/cron/*; do
+            if [[ -f "$file" ]]; then
+              for placeholder in __HOME__ __USER__ __CORE_INFRA__; do
+                if ! grep -q "$placeholder" "$file"; then
+                  echo "::error::Missing placeholder $placeholder in $file"
+                  missing=1
+                fi
+              done
+            fi
+          done
+          if [[ $missing -eq 1 ]]; then
+            exit 1
+          fi
+          echo "All cron templates contain required placeholders."
+
+      - name: Validate role structure
+        run: |
+          required=(base tools templates systemd cron mesh_sync)
+          for role in "${required[@]}"; do
+            if [[ ! -d "01-core-infra/ansible/roles/$role" ]]; then
+              echo "::error::Missing required role directory: 01-core-infra/ansible/roles/$role"
+              exit 1
+            fi
+          done
+          echo "All required Ansible roles are present."
