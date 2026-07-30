@@ -132,9 +132,9 @@
     creates: /usr/bin/tailscale
   become: true
   when: "'tailscale' in tools_sentries"
-
 - name: Install OMO (oh-my-openagent)
-  shell: bunx oh-my-openagent install --no-tui --platform=opencode --claude=no --gemini=no --copilot=no && mkdir -p ~/.config/opencode && touch ~/.config/opencode/.omo-installed-by-01-core-infra
+  shell: |
+    bunx oh-my-openagent install --no-tui --claude no --openai no --gemini no --copilot no --platform opencode && mkdir -p ~/.config/opencode && touch ~/.config/opencode/.omo-installed-by-01-core-infra
   args:
     creates: ~/.config/opencode/.omo-installed-by-01-core-infra
-  when: "'opencode' in tools_sentries and 'bun' in tools_sentries"
+  when: " 'opencode' in tools_sentries and 'bun' in tools_sentries"
