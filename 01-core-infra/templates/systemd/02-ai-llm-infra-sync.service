@@ -1,0 +1,33 @@
+# LLM Infra Sync Dashboard & API Service
+[Unit]
+Description=LLM Infra Sync Dashboard & API Server
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=aldo
+WorkingDirectory=/home/aldo/dev/02-ai-llm-infra-sync
+ExecStart=/home/aldo/.bun/bin/bun run src/server.ts
+Restart=always
+RestartSec=10
+Environment=NODE_ENV=production
+Environment=PORT=3003
+StandardOutput=journal
+StandardError=journal
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+# Logging
+SyslogIdentifier=llm-infra-sync
+
+[Install]
+WantedBy=multi-user.target
