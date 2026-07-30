@@ -9,7 +9,7 @@
     template_dir: "{{ infra_dir }}/templates"
     infra_templates: "{{ template_dir }}/infra"
     repo_manifest: "{{ infra_templates }}/repos.manifest.jsonc"
-    ollama_api_key_file: "/home/aldo/.config/ollama/api_key"
+    ollama_api_key_file: "__HOME__/.config/ollama/api_key"
 
   pre_tasks:
     - name: Detect system RAM in MB
