@@ -10,7 +10,7 @@ Group=aldo
 ExecStart=/usr/local/bin/opencode web --mdns
 Restart=unless-stopped
 RestartSec=5
-WorkingDirectory=/home/aldo
+WorkingDirectory=__HOME__
 
 [Install]
 WantedBy=multi-user.target

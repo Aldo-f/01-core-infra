@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Define the template path relative to repo root
-TEMPLATE="templates/cron/01-core-infra.cron"
+TEMPLATE="01-core-infra/templates/cron/01-core-infra.cron"
 
 ISSUES=0
 

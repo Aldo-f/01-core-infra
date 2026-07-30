@@ -89,5 +89,20 @@
   changed_when: false
   failed_when: sync_status.rc != 0
   ignore_errors: false
+
+- name: Verify dashboard API responds
+  shell: |
+    cd {{ __HOME__ }}/dev/02-ai-llm-infra-sync
+    bun run src/server.ts &
+    SERVER_PID=$!
+    sleep 3
+    curl -sf http://localhost:3003/api/status > /dev/null
+    RESULT=$?
+    kill $SERVER_PID 2>/dev/null || true
+    exit $RESULT
+  register: api_check
+  changed_when: false
+  failed_when: api_check.rc != 0
+  ignore_errors: true
   # Abort the play if sync could not produce a status report
   when: true
