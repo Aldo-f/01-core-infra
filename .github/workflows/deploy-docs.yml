@@ -38,7 +38,7 @@ jobs:
 
       - name: Install and build theme
         run: |
-          cd docs-theme
+          cd /home/aldo/dev/docs-theme
           npm ci
           npm run build
           mkdir -p ../docs/node_modules/@allo-f/docusaurus-theme
@@ -46,18 +46,18 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd docs
+          cd /home/aldo/dev/docs
           npm ci
 
       - name: Build Docusaurus site
         run: |
-          cd docs
+          cd /home/aldo/dev/docs
           npm run build
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/build
+          path: /home/aldo/dev/docs/build
 
       - name: Deploy to GitHub Pages
         id: deployment

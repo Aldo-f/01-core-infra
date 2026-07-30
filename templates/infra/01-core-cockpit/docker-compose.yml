@@ -1,4 +1,0 @@
-services:
-  cockpit:
-    image: quay.io/cockpit/ws:latest
-    network_mode: host

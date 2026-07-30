@@ -1,3 +1,0 @@
-# defaults/main.yml
-ollama_api_key_file: "/home/aldo/.config/ollama/api_key"
-ollama_model: "qwen3:8b"

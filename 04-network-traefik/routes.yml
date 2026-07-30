@@ -1,0 +1,90 @@
+http:
+  routers:
+    freellm-http:
+      rule: "Host(`freellm.aldof.duckdns.org`)"
+      entryPoints:
+        - web
+      middlewares:
+        - https-redirect
+      service: freellmapi
+
+    freellm:
+      rule: "Host(`freellm.aldof.duckdns.org`)"
+      entryPoints:
+        - websecure
+      service: freellmapi
+      tls:
+        certResolver: myresolver
+
+    hermes-dev-wild:
+      rule: "HostRegexp(`{subdomain:.+}.dev.aldof.duckdns.org`)"
+      entryPoints:
+        - websecure
+      middlewares:
+        - ipallow-dev
+      service: hermes-dev
+      tls:
+        certResolver: myresolver
+
+    hermes-dev:
+      rule: "Host(`dev.aldof.duckdns.org`)"
+      entryPoints:
+        - websecure
+      middlewares:
+        - ipallow-dev
+      service: hermes-dev
+      tls:
+        certResolver: myresolver
+
+    web-hermes-dev:
+      rule: "Host(`web.hermes.dev.aldof.duckdns.org`)"
+      entryPoints:
+        - websecure
+      middlewares:
+        - ipallow-dev
+      service: hermes-dev
+      tls:
+        certResolver: myresolver
+
+    opencode-dev:
+      rule: "Host(`opencode.dev.aldof.duckdns.org`)"
+      entryPoints:
+        - websecure
+      middlewares:
+        - ipallow-dev
+      service: opencode-dev
+      tls:
+        certResolver: myresolver
+
+    opencode-dev-http:
+      rule: "Host(`opencode.dev.aldof.duckdns.org`)"
+      entryPoints:
+        - web
+      middlewares:
+        - https-redirect
+
+  services:
+    freellmapi:
+      loadBalancer:
+        servers:
+          - url: "http://freellmapi:3001"
+    hermes-dev:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.0.5:8787"
+    opencode-dev:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.0.5:4096"
+
+  middlewares:
+    https-redirect:
+      redirectScheme:
+        scheme: https
+        permanent: true
+    ipallow-dev:
+      ipWhiteList:
+        sourceRange:
+          - "192.168.0.0/24"
+          - "127.0.0.1/32"
+          - "94.110.157.71/32"

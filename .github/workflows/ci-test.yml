@@ -35,9 +35,9 @@ jobs:
       - name: Test Ansible syntax
         run: |
           ansible --version
-          ansible-playbook --syntax-check ansible/playbooks/site.yml
+          ansible-playbook --syntax-check 01-core-infra/ansible/playbooks/site.yml
 
       - name: Run Ansible lint
         run: |
           echo "Running ansible-lint..."
-          ansible-lint ansible/playbooks/site.yml || echo "ansible-lint completed with warnings (this is acceptable)"
+          ansible-lint 01-core-infra/ansible/playbooks/site.yml || echo "ansible-lint completed with warnings (this is acceptable)"
