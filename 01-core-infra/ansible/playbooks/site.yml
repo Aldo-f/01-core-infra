@@ -5,23 +5,35 @@
   become: true
   gather_facts: true
   vars:
-    script_dir: "__CORE_INFRA__"
+    script_dir: "/home/aldo/dev/01-core-infra"
     template_dir: "{{ script_dir }}/templates"
     repo_manifest: "{{ template_dir }}/repos.manifest.jsonc"
-    ollama_api_key_file: "__HOME__/.config/ollama/api_key"
+    ollama_api_key_file: "/home/aldo/.config/ollama/api_key"
     container_test: false
     traefik_network: "traefik_net"
-    __HOME__: "/home/aldo"
-    dev_home: "__HOME__/dev"
-    infra_dir: "__CORE_INFRA__"
+    home_dir: "/home/aldo"
+    dev_home: "/home/aldo/dev"
+    infra_dir: "/home/aldo/dev/01-core-infra"
     ansible_user: aldo
     tools_sentries:
+      - docker
+      - nvm
+      - node
+      - npm
+      - tree
+      - ollama
+      - lmstudio
+      - fish
+      - hermes
+      - omo
+      - opencode
+      - mem0
       - bun
 
   pre_tasks:
     - name: Ensure bun binary is in system PATH
       file:
-        src: "__HOME__/.bun/bin/bun"
+        src: "/home/aldo/.bun/bin/bun"
         dest: "/usr/local/bin/bun"
         state: link
         force: yes
@@ -33,6 +45,6 @@
     - "templates"
     - "systemd"
     - "llamacpp"
+    - "neo-brutalist-home"
     - "cron"
     - "mesh_sync"
-
