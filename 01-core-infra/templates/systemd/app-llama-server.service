@@ -1,0 +1,14 @@
+[Unit]
+Description=llama.cpp llama-server (local GGUF inference)
+After=network.target
+
+[Service]
+Type=simple
+User=aldo
+Group=aldo
+ExecStart=/home/aldo/dev/llama.cpp/build/bin/llama-server -m /home/aldo/models/Llama-3.2-3B-Instruct-Q4_K_M.gguf --host 127.0.0.1 --port 8080 -c 8192 --alias llama-3.2-3b
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,21 @@
+---
+# llama.cpp role defaults
+llamacpp_repo: https://github.com/ggml-org/llama.cpp
+llamacpp_src: /home/aldo/dev/llama.cpp
+llamacpp_build_dir: /home/aldo/dev/llama.cpp/build
+llamacpp_server_bin: /home/aldo/dev/llama.cpp/build/bin/llama-server
+
+llamacpp_models_dir: /home/aldo/models
+llamacpp_model_name: Llama-3.2-3B-Instruct-Q4_K_M.gguf
+llamacpp_model_url: https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q4_K_M.gguf
+llamacpp_model_path: /home/aldo/models/Llama-3.2-3B-Instruct-Q4_K_M.gguf
+
+llamacpp_host: 127.0.0.1
+llamacpp_port: 8080
+llamacpp_ctx: 8192
+llamacpp_alias: llama-3.2-3b
+llamacpp_service: app-llama-server
+llamacpp_service_unit: /etc/systemd/system/app-llama-server.service
+
+llamacpp_hermes_cli: /home/aldo/.local/bin/hermes
+llamacpp_hermes_config: /home/aldo/.hermes/config.yaml

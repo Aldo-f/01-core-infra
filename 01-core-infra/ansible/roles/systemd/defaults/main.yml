@@ -3,6 +3,7 @@ systemd_services:
   - app-hermes-gateway
   - app-hermes-web
   - app-opencode-web
+  - app-llama-server
 
 sudoers_file: "/etc/sudoers.d/01-core-infra-deploy"
 

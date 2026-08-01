@@ -12,6 +12,8 @@ tools_sentries:
     command: fvm -v
   ollama:
     command: ollama -v
+  llama-server:
+    command: llama-server --version
   lmstudio:
     command: lms -v
   fish:

@@ -1,0 +1,116 @@
+---
+# llama.cpp: local GGUF inference server (llama-server) + model + Hermes provider alias
+# Idempotent: clone/build/model-download are marker-based (creates), service is systemd-managed.
+
+- name: Ensure llama.cpp build dependencies
+  apt:
+    name:
+      - cmake
+      - git
+      - build-essential
+    state: present
+    update_cache: true
+  become: true
+  when: not container_test
+
+- name: Clone llama.cpp source
+  git:
+    repo: "{{ llamacpp_repo }}"
+    dest: "{{ llamacpp_src }}"
+    version: master
+    depth: 1
+    update: no
+  become: true
+  become_user: aldo
+  when: not container_test
+
+- name: Configure llama.cpp build (cmake)
+  command: cmake -B build -DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=ON
+  args:
+    chdir: "{{ llamacpp_src }}"
+    creates: "{{ llamacpp_build_dir }}/CMakeCache.txt"
+  become: true
+  become_user: aldo
+  when: not container_test
+
+- name: Build llama.cpp (llama-server)
+  command: cmake --build build --config Release -j4
+  args:
+    chdir: "{{ llamacpp_src }}"
+    creates: "{{ llamacpp_server_bin }}"
+  become: true
+  become_user: aldo
+  when: not container_test
+
+- name: Create models directory
+  file:
+    path: "{{ llamacpp_models_dir }}"
+    state: directory
+    owner: aldo
+    group: aldo
+    mode: "0755"
+  become: true
+  become_user: aldo
+
+- name: Download Llama-3.2-3B GGUF model
+  shell: "curl -L --fail -C - -o {{ llamacpp_model_path }} {{ llamacpp_model_url }}"
+  args:
+    creates: "{{ llamacpp_model_path }}"
+  become: true
+  become_user: aldo
+
+- name: Deploy llama-server systemd unit
+  copy:
+    src: "{{ template_dir }}/systemd/app-llama-server.service"
+    dest: "{{ llamacpp_service_unit }}"
+    owner: root
+    group: root
+    mode: "0644"
+  become: true
+  when: not container_test
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: true
+  become: true
+  when: not container_test
+
+- name: Enable and start llama-server service
+  systemd:
+    name: "{{ llamacpp_service }}"
+    enabled: true
+    state: started
+  become: true
+  when: not container_test
+
+- name: Check for existing local-llama Hermes alias
+  shell: "grep -q 'local-llama' {{ llamacpp_hermes_config }} && echo present || echo absent"
+  become: true
+  become_user: aldo
+  register: llamacpp_alias_check
+  changed_when: false
+  when: not container_test
+
+- name: Configure Hermes alias local-llama (model)
+  command: "{{ llamacpp_hermes_cli }} config set --force model_aliases.local-llama.model {{ llamacpp_alias }}"
+  become: true
+  become_user: aldo
+  when:
+    - not container_test
+    - "'absent' in llamacpp_alias_check.stdout"
+
+- name: Configure Hermes alias local-llama (provider)
+  command: "{{ llamacpp_hermes_cli }} config set --force model_aliases.local-llama.provider custom"
+  become: true
+  become_user: aldo
+  when:
+    - not container_test
+    - "'absent' in llamacpp_alias_check.stdout"
+
+- name: Configure Hermes alias local-llama (base_url)
+  command: "{{ llamacpp_hermes_cli }} config set --force model_aliases.local-llama.base_url http://{{ llamacpp_host }}:{{ llamacpp_port }}/v1"
+  become: true
+  become_user: aldo
+  when:
+    - not container_test
+    - "'absent' in llamacpp_alias_check.stdout"

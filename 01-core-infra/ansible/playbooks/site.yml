@@ -32,6 +32,7 @@
     - "tools"
     - "templates"
     - "systemd"
+    - "llamacpp"
     - "cron"
     - "mesh_sync"
 
