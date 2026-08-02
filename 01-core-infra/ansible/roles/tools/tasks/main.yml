@@ -9,32 +9,36 @@
   shell: curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.6/install.sh | bash
   args:
     creates: /home/aldo/.nvm/nvm.sh
+  become_user: aldo
   when: "'nvm' in tools_sentries"
 
 - name: Load NVM in current shell and verify installation
   shell: |
-    export NVM_DIR="$HOME/.nvm"
+    export NVM_DIR="/home/aldo/.nvm"
     [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
     [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
     command -v nvm
+  become_user: aldo
   when: "'nvm' in tools_sentries"
 
 - name: Install and activate LTS Node.js version via NVM
   shell: |
-    export NVM_DIR="$HOME/.nvm"
+    export NVM_DIR="/home/aldo/.nvm"
     [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
     nvm install --lts
     nvm use --lts
   args:
     creates: /home/aldo/.nvm/versions/node/v*/bin/node
+  become_user: aldo
   when: "'nvm' in tools_sentries"
 
 - name: Verify Node.js and npm installation
   shell: |
-    export NVM_DIR="$HOME/.nvm"
+    export NVM_DIR="/home/aldo/.nvm"
     [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
     node -v
     npm -v
+  become_user: aldo
   when: "'nvm' in tools_sentries"
 
 - name: Install LM Studio
