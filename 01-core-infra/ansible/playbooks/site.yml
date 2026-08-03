@@ -29,7 +29,7 @@
       - opencode
       - mem0
       - bun
-
+      - freellmapi
   pre_tasks:
     - name: Ensure bun binary is in system PATH
       file:
@@ -38,7 +38,6 @@
         state: link
         force: yes
       become: true
-
   roles:
     - "base"
     - "tools"
@@ -46,5 +45,10 @@
     - "systemd"
     - "llamacpp"
     - "neo-brutalist-home"
+    - "manifest-repos"
     - "cron"
+    - "hermes-skills"
+    - "freellmapi"
     - "mesh_sync"
+    - "containers"
+    - "nextcloud-sync"

@@ -12,6 +12,8 @@ auth.json
 .env
 .env.*
 *.env
+# .env.j2 jinja templates contain only placeholders (no secrets) — committable
+!.env.j2
 
 # OS files
 .DS_Store

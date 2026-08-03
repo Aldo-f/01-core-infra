@@ -38,12 +38,31 @@
 
 - name: Install dependencies and build freellmapi
   shell: |
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+    nvm use default >/dev/null 2>&1 || nvm use --lts >/dev/null 2>&1 || true
     cd /home/aldo/dev/02-ai-freellm
     npm ci
     npm run build
   args:
+    executable: /bin/bash
     creates: /home/aldo/dev/02-ai-freellm/server/dist
+  become_user: aldo
   when: "'freellmapi' in tools_sentries"
+
+- name: Load freellmapi vault credentials
+  include_vars:
+    file: "{{ lookup('env', 'HOME') }}/dev/01-core-infra/vaults/freellmapi-credentials.yml"
+  no_log: true
+
+- name: Render freellmapi .env from vault
+  template:
+    src: "{{ template_dir }}/infra/02-ai-freellmapi/infra/.env.j2"
+    dest: /home/aldo/dev/02-ai-freellm/.env
+    owner: aldo
+    group: aldo
+    mode: "0600"
+  no_log: true
 
 - name: Deploy freellmapi service
   shell: |
@@ -51,4 +70,5 @@
     docker-compose up -d
   args:
     creates: /home/aldo/dev/02-ai-freellm/server/dist
+  become_user: aldo
   when: "'freellmapi' in tools_sentries"
