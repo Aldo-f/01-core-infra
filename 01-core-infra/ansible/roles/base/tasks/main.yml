@@ -21,3 +21,9 @@
     name: aldo
     groups: docker
     append: yes
+
+- name: Add aldo to www-data group
+  user:
+    name: aldo
+    groups: www-data
+    append: yes
