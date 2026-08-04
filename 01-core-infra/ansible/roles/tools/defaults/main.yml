@@ -4,6 +4,8 @@ tools_sentries:
     command: node -v
   nvm:
     command: nvm --version
+  npm:
+    command: npm -v
   pnpm:
     command: pnpm -v
   bun:
@@ -14,6 +16,8 @@ tools_sentries:
     command: ollama -v
   llama-server:
     command: llama-server --version
+  locate:
+    command: locate --version
   lmstudio:
     command: lms -v
   fish:
@@ -22,6 +26,8 @@ tools_sentries:
     command: hermes -v
   opencode:
     command: opencode -v
+  omo:
+    command: omo --version
   tree:
     command: tree -v
   tailscale:
@@ -42,3 +48,11 @@ tools_sentries:
     command: "terraform -version"
   kubectl:
     command: "kubectl version --client"
+  gcloud:
+    command: "gcloud --version"
+  script_google:
+    command: "npm view @google/clasp version"
+  freellmapi:
+    command: "docker ps --format '{{.Names}}' | grep -q freellmapi && echo 'running' || echo 'not running'"
+  mem0:
+    command: "python3 -c 'import mem0; print(mem0.__version__)' 2>/dev/null || echo 'not installed'"

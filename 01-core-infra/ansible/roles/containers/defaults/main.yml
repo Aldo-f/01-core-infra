@@ -1,0 +1,24 @@
+---
+# Default variables for the containers role (deploy compose services + Traefik routes)
+traefik_network: "traefik_net"
+traefik_runtime_dir: "/home/aldo/dev/04-network-traefik"
+
+container_services:
+  # 01-core-* -> in-repo runtime dirs
+  - name: 01-core-portainer
+    runtime_dir: "/home/aldo/dev/01-core-infra/portainer"
+  - name: 01-core-cockpit
+    runtime_dir: "/home/aldo/dev/01-core-infra/cockpit"
+  # 05-media-* -> in-repo runtime dirs
+  - name: 05-media-plex
+    runtime_dir: "/home/aldo/dev/01-core-infra/plex"
+  - name: 05-media-qbittorrent
+    runtime_dir: "/home/aldo/dev/01-core-infra/qbittorrent"
+  - name: 05-media-nextcloud
+    runtime_dir: "/home/aldo/dev/01-core-infra/nextcloud"
+  # 06-apps-* -> own git repos (via manifest, only infra/ overwritten)
+  - name: 06-apps-scripts-google
+    runtime_dir: "/home/aldo/dev/06-apps-scripts-google"
+  # 07-security-* -> sibling dev repo dir
+  - name: 07-security-vaultwarden
+    runtime_dir: "/home/aldo/dev/07-security-vaultwarden"

@@ -5,6 +5,7 @@
   become: true
   gather_facts: true
   vars:
+    ansible_python_interpreter: /usr/bin/python3
     script_dir: "/home/aldo/dev/01-core-infra"
     template_dir: "{{ script_dir }}/templates"
     repo_manifest: "{{ template_dir }}/repos.manifest.jsonc"
@@ -20,16 +21,22 @@
       - nvm
       - node
       - npm
+      - pnpm
+      - bun
+      - fvm
       - tree
       - ollama
+      - llama-server
+      - locate
       - lmstudio
       - fish
       - hermes
-      - omo
       - opencode
+      - omo
       - mem0
-      - bun
       - freellmapi
+      - script_google
+      - tailscale
   pre_tasks:
     - name: Ensure bun binary is in system PATH
       file:
