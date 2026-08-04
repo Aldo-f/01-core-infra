@@ -1,0 +1,15 @@
+[Unit]
+Description=Neo-Brutalist Homepage Flask Server
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/06-apps-neo-brutalist-home/server.py
+User=www-data
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

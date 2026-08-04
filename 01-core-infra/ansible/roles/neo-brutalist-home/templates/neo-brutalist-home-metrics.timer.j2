@@ -1,0 +1,11 @@
+[Unit]
+Description=Neo-Brutalist Homepage Timer
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=60s
+Persistent=true
+Unit=06-apps-neo-brutalist-home-metrics.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,10 @@
+[Unit]
+Description=Neo-Brutalist Homepage Metrics Collection
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/06-apps-neo-brutalist-home/collect-metrics.sh
+User=root
+StandardOutput=journal
+StandardError=journal

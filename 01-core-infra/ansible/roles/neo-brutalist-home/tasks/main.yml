@@ -1,0 +1,137 @@
+# Neo-Brutalist Homepage Role
+# Deploys a static neo-brutalist homepage with server metrics
+# Uses Python HTTP server (no nginx required)
+
+- name: Create site root directory
+  file:
+    path: "{{ site_root }}"
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: '0755'
+
+- name: Create metrics script directory
+  file:
+    path: "/opt/06-apps-neo-brutalist-home"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Create log directory
+  file:
+    path: "{{ log_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Deploy index.html
+  template:
+    src: index.html.j2
+    dest: "{{ site_root }}/index.html"
+    owner: www-data
+    group: www-data
+    mode: '0644'
+
+- name: Deploy style.css
+  copy:
+    content: |
+      /* Neo-Brutalist Homepage Styles */
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: 'Courier New', Courier, monospace; background: #f5f5f0; color: #000000; line-height: 1.6; padding: 1rem; max-width: 1200px; margin: 0 auto; }
+      h1, h2, h3 { font-family: 'Courier New', Courier, monospace; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; }
+      h1 { font-size: 2rem; border-bottom: 4px solid #000000; padding-bottom: 0.5rem; margin-bottom: 1.5rem; }
+      h2 { font-size: 1.4rem; border: 3px solid #000000; padding: 0.5rem 1rem; margin: 2rem 0 1rem 0; background: #ffffff; }
+      header { border: 3px solid #000000; padding: 1.5rem; margin-bottom: 2rem; background: #ffffff; }
+      header h1 { border: none; padding: 0; margin: 0; }
+      header p { margin-top: 0.5rem; font-size: 0.9rem; }
+      main { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+      @media (max-width: 768px) { main { grid-template-columns: 1fr; } }
+      section { border: 3px solid #000000; padding: 1rem; background: #ffffff; }
+      footer { border: 3px solid #000000; padding: 1rem; margin-top: 2rem; background: #ffffff; text-align: center; font-size: 0.8rem; }
+      .metrics-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+      .metric-card { border: 3px solid #000000; padding: 0.75rem; background: #f5f5f0; }
+      .metric-card .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: #555555; }
+      .metric-card .value { font-size: 1.5rem; font-weight: bold; margin: 0.25rem 0; }
+      .metric-card .sub { font-size: 0.8rem; color: #555555; }
+      .progress-bar { border: 2px solid #000000; height: 1rem; background: #ffffff; margin-top: 0.25rem; }
+      .progress-fill { height: 100%; background: #000000; }
+      .progress-fill.warning { background: #cc6600; }
+      .progress-fill.critical { background: #cc0000; }
+      .subsite-list { list-style: none; }
+      .subsite-list li { border-bottom: 2px solid #000000; padding: 0.75rem 0; display: flex; justify-content: space-between; align-items: center; }
+      .subsite-list a { color: #000000; text-decoration: underline; font-weight: bold; font-size: 1.1rem; }
+      .subsite-list a:hover { background: #000000; color: #ffffff; }
+      .project-count { font-size: 3rem; font-weight: bold; text-align: center; border: 4px solid #000000; padding: 1rem; background: #ffffff; }
+      .na { color: #999999; font-style: italic; }
+      .timestamp { font-size: 0.75rem; color: #555555; }
+      @media print { body { background: white; padding: 0; } section, header, footer { border: 1px solid #000; } }
+    dest: "{{ site_root }}/style.css"
+    owner: www-data
+    group: www-data
+    mode: '0644'
+
+- name: Deploy metrics.json (initial)
+  copy:
+    content: '{"uptime": "N/A", "ram_used": "N/A", "ram_total": "N/A", "ram_percent": 0, "hdd1_used": "N/A", "hdd1_total": "N/A", "hdd1_percent": 0, "ssd_used": "N/A", "ssd_total": "N/A", "ssd_percent": 0, "cpu_load_1m": 0, "cpu_load_5m": 0, "cpu_load_15m": 0, "cpu_temp": "N/A", "subsite_count": 0, "last_updated": "N/A"}'
+    dest: "{{ site_root }}/metrics.json"
+    owner: www-data
+    group: www-data
+    mode: '0644'
+
+- name: Deploy metrics collection script
+  template:
+    src: collect-metrics.sh.j2
+    dest: "{{ metrics_script }}"
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Deploy Flask HTTP server
+  template:
+    src: server.py.j2
+    dest: "/opt/06-apps-neo-brutalist-home/server.py"
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Deploy metrics collection service
+  template:
+    src: neo-brutalist-home-metrics.service.j2
+    dest: "/etc/systemd/system/06-apps-neo-brutalist-home-metrics.service"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Deploy metrics collection timer
+  template:
+    src: neo-brutalist-home-metrics.timer.j2
+    dest: "/etc/systemd/system/06-apps-neo-brutalist-home-metrics.timer"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Deploy homepage server service
+  template:
+    src: neo-brutalist-home-server.service.j2
+    dest: "/etc/systemd/system/06-apps-neo-brutalist-home-server.service"
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: true
+
+- name: Enable and start metrics timer
+  systemd:
+    name: 06-apps-neo-brutalist-home-metrics.timer
+    enabled: true
+    state: started
+
+- name: Enable and start homepage server
+  systemd:
+    name: 06-apps-neo-brutalist-home-server
+    enabled: true
+    state: started

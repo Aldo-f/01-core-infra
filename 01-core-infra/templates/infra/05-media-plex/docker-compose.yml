@@ -1,0 +1,22 @@
+version: '3.9'
+
+services:
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: plex
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - VERSION=docker
+      - PLEX_CLAIM=
+    volumes:
+      - /mnt/HDD1/plex/config:/config
+      - /mnt/HDD1/media/movies:/movies
+      - /mnt/HDD1/media/tv:/tv
+    networks:
+      - traefik_net
+
+networks:
+  traefik_net:
+    external: true

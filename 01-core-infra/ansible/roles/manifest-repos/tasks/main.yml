@@ -1,0 +1,44 @@
+---
+# Tasks for manifest-repos role
+
+- name: Ensure dev base directory exists
+  ansible.builtin.file:
+    path: "{{ dev_home }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+
+- name: Parse manifest (strip comments, extract JSON)
+  ansible.builtin.command: >
+    python3 -c "import json,re,sys;c=open('{{ manifest_path }}').read();c=re.sub(r'(?<!:)//.*$','',c,flags=re.M);print(json.dumps(json.loads(c)))"
+  args:
+    executable: /bin/bash
+  register: manifest_raw
+  changed_when: false
+  check_mode: false
+
+- name: Set manifest_data fact
+  ansible.builtin.set_fact:
+    manifest_data: "{{ manifest_raw.stdout | from_json }}"
+
+- name: Debug manifest repos count
+  ansible.builtin.debug:
+    msg: "Found {{ manifest_data.repos | length }} repositories in manifest"
+
+- name: Process each repository from manifest
+  ansible.builtin.include_tasks: process_repo.yml
+  loop: "{{ manifest_data.repos }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Ensure infra directories exist for all manifest repos (even if no source)
+  ansible.builtin.file:
+    path: "{{ template_dir }}/infra/{{ item.name }}/infra"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+  loop: "{{ manifest_data.repos }}"
+  loop_control:
+    label: "{{ item.name }}"

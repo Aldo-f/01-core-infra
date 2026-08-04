@@ -1,0 +1,4 @@
+---
+- name: reload traefik
+  command: docker restart traefik
+  become: true

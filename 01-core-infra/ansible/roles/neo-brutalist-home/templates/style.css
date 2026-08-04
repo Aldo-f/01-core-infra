@@ -1,0 +1,176 @@
+/* ── Neo-Brutalist Homepage Styles ─────────── */
+/* Raw, bold, high-contrast. No frameworks.    */
+
+body {
+    font-family: 'Courier New', Courier, monospace;
+    background: #f5f5f0;
+    color: #000000;
+    line-height: 1.6;
+    padding: 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+h1, h2, h3 {
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+h1 {
+    font-size: 2rem;
+    border-bottom: 4px solid #000000;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+h2 {
+    font-size: 1.4rem;
+    border: 3px solid #000000;
+    padding: 0.5rem 1rem;
+    margin: 2rem 0 1rem 0;
+    background: #ffffff;
+}
+
+header {
+    border: 3px solid #000000;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    background: #ffffff;
+}
+
+main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    main {
+        grid-template-columns: 1fr;
+    }
+}
+
+section {
+    border: 3px solid #000000;
+    padding: 1rem;
+    background: #ffffff;
+}
+
+footer {
+    border: 3px solid #000000;
+    padding: 1rem;
+    margin-top: 2rem;
+    background: #ffffff;
+    text-align: center;
+    font-size: 0.8rem;
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.metric-card {
+    border: 3px solid #000000;
+    padding: 0.75rem;
+    background: #f5f5f0;
+}
+
+.metric-card .label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #555555;
+}
+
+.metric-card .value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 0.25rem 0;
+}
+
+.progress-bar {
+    border: 2px solid #000000;
+    height: 1rem;
+    background: #ffffff;
+    margin-top: 0.25rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #000000;
+}
+
+.progress-fill.warning {
+    background: #cc6600;
+}
+
+.progress-fill.critical {
+    background: #cc0000;
+}
+
+.subsite-list {
+    list-style: none;
+}
+
+.subsite-list li {
+    border-bottom: 2px solid #000000;
+    padding: 0.5rem 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.subsite-list a {
+    color: #000000;
+    text-decoration: underline;
+    font-weight: bold;
+}
+
+.status-dot {
+    display: inline-block;
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 0;
+    margin-right: 0.5rem;
+}
+
+.status-dot.online {
+    background: #00cc00;
+}
+
+.status-dot.offline {
+    background: #cc0000;
+}
+
+.project-count {
+    font-size: 3rem;
+    font-weight: bold;
+    text-align: center;
+    border: 4px solid #000000;
+    padding: 1rem;
+    background: #ffffff;
+}
+
+.na {
+    color: #999999;
+    font-style: italic;
+}
+
+.timestamp {
+    font-size: 0.75rem;
+    color: #555555;
+}
+
+@media print {
+    body {
+        background: white;
+        padding: 0;
+    }
+    section, header, footer {
+        border: 1px solid #000;
+    }
+}

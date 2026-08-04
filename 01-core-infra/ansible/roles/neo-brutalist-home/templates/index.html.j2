@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>aldof.duckdns.org — Server Status</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background: #f5f5f0;
+            color: #000000;
+            line-height: 1.6;
+            padding: 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1, h2, h3 { font-family: 'Courier New', Courier, monospace; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; }
+        h1 { font-size: 2rem; border-bottom: 4px solid #000000; padding-bottom: 0.5rem; margin-bottom: 1.5rem; }
+        h2 { font-size: 1.4rem; border: 3px solid #000000; padding: 0.5rem 1rem; margin: 2rem 0 1rem 0; background: #ffffff; }
+        header { border: 3px solid #000000; padding: 1.5rem; margin-bottom: 2rem; background: #ffffff; }
+        header h1 { border: none; padding: 0; margin: 0; }
+        header p { margin-top: 0.5rem; font-size: 0.9rem; }
+        main { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        @media (max-width: 768px) { main { grid-template-columns: 1fr; } }
+        section { border: 3px solid #000000; padding: 1rem; background: #ffffff; }
+        footer { border: 3px solid #000000; padding: 1rem; margin-top: 2rem; background: #ffffff; text-align: center; font-size: 0.8rem; }
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+        .metric-card { border: 3px solid #000000; padding: 0.75rem; background: #f5f5f0; }
+        .metric-card .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: #555555; }
+        .metric-card .value { font-size: 1.5rem; font-weight: bold; margin: 0.25rem 0; }
+        .metric-card .sub { font-size: 0.8rem; color: #555555; }
+        .progress-bar { border: 2px solid #000000; height: 1rem; background: #ffffff; margin-top: 0.25rem; }
+        .progress-fill { height: 100%; background: #000000; }
+        .progress-fill.warning { background: #cc6600; }
+        .progress-fill.critical { background: #cc0000; }
+        
+        /* Search & Tags */
+        .search-box {
+            width: 100%;
+            padding: 0.5rem;
+            border: 2px solid #000000;
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            background: #ffffff;
+        }
+        .search-box:focus { outline: none; border-color: #666666; }
+        .tag {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border: 2px solid #000000;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-right: 0.25rem;
+            background: #000000;
+            color: #ffffff;
+        }
+        .tag.ai { background: #0066cc; }
+        .tag.storage { background: #cc6600; }
+        .tag.app { background: #009900; }
+        .tag.network { background: #990099; }
+        
+        .subsite-list { list-style: none; }
+        .subsite-list li {
+            border-bottom: 2px solid #000000;
+            padding: 0.75rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .subsite-list li:last-child { border-bottom: none; }
+        .subsite-list a {
+            color: #000000;
+            text-decoration: underline;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        .subsite-list a:hover { background: #000000; color: #ffffff; }
+        .subsite-meta { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+        .subsite-desc { font-size: 0.8rem; color: #555555; }
+        .subsite-health {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+        }
+        .status-dot {
+            display: inline-block;
+            width: 0.75rem;
+            height: 0.75rem;
+            border: 2px solid #000000;
+        }
+        .status-dot.online { background: #00cc00; }
+        .status-dot.offline { background: #cc0000; }
+        .status-dot.unknown { background: #cccccc; }
+        .response-time { font-size: 0.75rem; color: #555555; }
+        
+        .project-count { font-size: 3rem; font-weight: bold; text-align: center; border: 4px solid #000000; padding: 1rem; background: #ffffff; }
+        .na { color: #999999; font-style: italic; }
+        .timestamp { font-size: 0.75rem; color: #555555; }
+        
+        /* Filter buttons */
+        .filter-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+        .filter-btn {
+            padding: 0.25rem 0.75rem;
+            border: 2px solid #000000;
+            background: #ffffff;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+        .filter-btn:hover, .filter-btn.active { background: #000000; color: #ffffff; }
+        
+        @media print { body { background: white; padding: 0; } section, header, footer { border: 1px solid #000; } }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>aldof.duckdns.org</h1>
+        <p>Neo-Brutalist Server Dashboard — <span class="timestamp" id="last-updated">Loading...</span></p>
+    </header>
+
+    <main>
+        <!-- ── System Metrics ──────────────────────── -->
+        <section>
+            <h2>System Metrics</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="label">Uptime</div>
+                    <div class="value" id="uptime">N/A</div>
+                    <div class="sub" id="uptime-seconds"></div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="label">RAM</div>
+                    <div class="value" id="ram">N/A</div>
+                    <div class="progress-bar"><div class="progress-fill" id="ram-bar" style="width: 0%"></div></div>
+                    <div class="sub" id="ram-detail"></div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="label">HDD1</div>
+                    <div class="value" id="hdd1">N/A</div>
+                    <div class="progress-bar"><div class="progress-fill" id="hdd1-bar" style="width: 0%"></div></div>
+                    <div class="sub" id="hdd1-detail"></div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="label">SSD (Root)</div>
+                    <div class="value" id="ssd">N/A</div>
+                    <div class="progress-bar"><div class="progress-fill" id="ssd-bar" style="width: 0%"></div></div>
+                    <div class="sub" id="ssd-detail"></div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="label">CPU Load</div>
+                    <div class="value" id="cpu-load">N/A</div>
+                    <div class="sub">1m / 5m / 15m</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="label">CPU Temp</div>
+                    <div class="value" id="cpu-temp">N/A</div>
+                    <div class="sub">°C</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── Project Counter ─────────────────────── -->
+        <section>
+            <h2>Projects</h2>
+            <div class="project-count" id="subsite-count">N/A</div>
+            <p style="text-align: center; margin-top: 0.5rem;">active subsites</p>
+        </section>
+
+        <!-- ── Subsite Links with Search & Tags ───── -->
+        <section style="grid-column: 1 / -1;">
+            <h2>Subsites</h2>
+            
+            <!-- Search Box -->
+            <input type="text" class="search-box" id="search-box" placeholder="Search subsites...">
+            
+            <!-- Filter Buttons -->
+            <div class="filter-buttons" id="filter-buttons">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="AI">AI</button>
+                <button class="filter-btn" data-filter="Storage">Storage</button>
+                <button class="filter-btn" data-filter="App">App</button>
+                <button class="filter-btn" data-filter="Network">Network</button>
+                <button class="filter-btn" data-filter="Home">Home</button>
+            </div>
+            
+            <!-- Subsite List -->
+            <ul class="subsite-list" id="subsite-list">
+                <li><span class="na">Loading...</span></li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>Neo-Brutalist Homepage — Deployed via Ansible from 01-core-infra</p>
+        <p>Metrics refresh every 60s | JavaScript required for dynamic content</p>
+    </footer>
+
+    <script>
+        let allSubsites = [];
+        let currentFilter = 'all';
+        let searchQuery = '';
+
+        // Fetch metrics.json client-side
+        fetch('/metrics.json')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                // Update system metrics
+                document.getElementById('uptime').textContent = data.uptime || 'N/A';
+                document.getElementById('uptime-seconds').textContent = data.uptime_seconds ? data.uptime_seconds + 's' : '';
+                document.getElementById('ram').textContent = (data.ram_used_gb || 'N/A') + ' / ' + (data.ram_total_gb || 'N/A') + ' GB';
+                document.getElementById('ram-detail').textContent = (data.ram_percent || 0) + '% used';
+                document.getElementById('ram-bar').style.width = (data.ram_percent || 0) + '%';
+                document.getElementById('hdd1').textContent = (data.hdd1_used_gb || 'N/A') + ' / ' + (data.hdd1_total_gb || 'N/A') + ' TB';
+                document.getElementById('hdd1-detail').textContent = (data.hdd1_percent || 0) + '% used';
+                document.getElementById('hdd1-bar').style.width = Math.min(data.hdd1_percent || 0, 100) + '%';
+                document.getElementById('ssd').textContent = (data.ssd_used_gb || 'N/A') + ' / ' + (data.ssd_total_gb || 'N/A') + ' GB';
+                document.getElementById('ssd-detail').textContent = (data.ssd_percent || 0) + '% used';
+                document.getElementById('ssd-bar').style.width = Math.min(data.ssd_percent || 0, 100) + '%';
+                document.getElementById('cpu-load').textContent = data.cpu_load_1m || 'N/A';
+                document.getElementById('cpu-temp').textContent = data.cpu_temp_celsius || 'N/A';
+                document.getElementById('subsite-count').textContent = data.subsite_count || 0;
+                document.getElementById('last-updated').textContent = data.last_updated || 'N/A';
+
+                // Store subsites
+                allSubsites = data.subsites || [];
+                renderSubsites();
+
+                // Color-code progress bars
+                var bars = ['ram-bar', 'hdd1-bar', 'ssd-bar'];
+                bars.forEach(function(id) {
+                    var bar = document.getElementById(id);
+                    if (bar) {
+                        var pct = parseInt(bar.style.width, 10);
+                        bar.classList.remove('warning', 'critical');
+                        if (pct > 90) bar.classList.add('critical');
+                        else if (pct > 75) bar.classList.add('warning');
+                    }
+                });
+            })
+            .catch(function() {
+                document.getElementById('last-updated').textContent = 'Metrics unavailable';
+            });
+
+        // Render subsite list with filtering
+        function renderSubsites() {
+            const list = document.getElementById('subsite-list');
+            let filtered = allSubsites;
+            
+            // Apply tag filter
+            if (currentFilter !== 'all') {
+                filtered = filtered.filter(function(s) {
+                    return s.tags && s.tags.some(function(t) { return t.toLowerCase() === currentFilter.toLowerCase(); });
+                });
+            }
+            
+            // Apply search filter
+            if (searchQuery) {
+                const query = searchQuery.toLowerCase();
+                filtered = filtered.filter(function(s) {
+                    return s.host.toLowerCase().includes(query) ||
+                           (s.description && s.description.toLowerCase().includes(query)) ||
+                           (s.tags && s.tags.some(function(t) { return t.toLowerCase().includes(query); }));
+                });
+            }
+
+            if (filtered.length === 0) {
+                list.innerHTML = '<li><span class="na">No subsites match your filter.</span></li>';
+                return;
+            }
+
+            list.innerHTML = filtered.map(function(s) {
+                const tagsHtml = (s.tags || []).map(function(t) {
+                    const tagClass = t.toLowerCase();
+                    return `<span class="tag ${tagClass}">${t}</span>`;
+                }).join('');
+                
+                const healthClass = s.status === 'online' ? 'online' : (s.status === 'offline' ? 'offline' : 'unknown');
+                const responseTimeHtml = s.response_time_ms > 0 
+                    ? `<span class="response-time">${s.response_time_ms}ms</span>` 
+                    : '';
+                
+                return `<li data-tags='${JSON.stringify(s.tags || [])}'>
+                    <div class="subsite-meta">
+                        <a href="${s.url}">${s.host}</a>
+                        <span class="status-dot ${healthClass}"></span>
+                        ${responseTimeHtml}
+                    </div>
+                    <div>
+                        ${tagsHtml}
+                        <span class="subsite-desc">${s.description || ''}</span>
+                    </div>
+                </li>`;
+            }).join('');
+        }
+
+        // Search box handler
+        document.getElementById('search-box').addEventListener('input', function(e) {
+            searchQuery = e.target.value;
+            renderSubsites();
+        });
+
+        // Filter button handlers
+        document.getElementById('filter-buttons').addEventListener('click', function(e) {
+            if (e.target.classList.contains('filter-btn')) {
+                // Update active state
+                document.querySelectorAll('.filter-btn').forEach(function(btn) {
+                    btn.classList.remove('active');
+                });
+                e.target.classList.add('active');
+                
+                // Apply filter
+                currentFilter = e.target.dataset.filter;
+                renderSubsites();
+            }
+        });
+    </script>
+</body>
+</html>

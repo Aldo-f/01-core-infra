@@ -56,3 +56,5 @@ tools_sentries:
     command: "docker ps --format '{{.Names}}' | grep -q freellmapi && echo 'running' || echo 'not running'"
   mem0:
     command: "python3 -c 'import mem0; print(mem0.__version__)' 2>/dev/null || echo 'not installed'"
+  toot:
+    command: "toot --version"

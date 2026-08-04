@@ -1,0 +1,24 @@
+# 02-ai-script-google systemd service
+# This service is used for managing Google Apps Script deployments
+# Note: Actual Google Apps Script deployment requires Google Cloud setup
+# and OAuth credentials, which are not included in this template.
+
+[Unit]
+Description=Google Apps Script Deployment Service
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+WorkingDirectory=/home/aldo/dev/02-ai-script-google
+Environment="GOOGLE_APPS_SCRIPT_PROJECT_ID=script-google"
+Environment="GOOGLE_APPS_SCRIPT_DEVELOPER_EMAIL=aldo@aldof.duckdns.org"
+Environment="NODE_ENV=production"
+ExecStart=/bin/bash -c "echo \"Google Apps Script deployment - handled via Google Cloud APIs\" && sleep infinity"
+Restart=unless-stopped
+RestartSec=10
+User=aldo
+Group=aldo
+
+[Install]
+WantedBy=multi-user.target

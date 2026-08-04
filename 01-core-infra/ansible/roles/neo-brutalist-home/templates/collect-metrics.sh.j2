@@ -1,0 +1,98 @@
+#!/bin/bash
+# Neo-Brutalist Homepage Metrics Collection Script
+# Runs every 60 seconds via systemd timer
+# Outputs JSON to /var/www/06-apps-neo-brutalist-home/metrics.json
+
+set -euo pipefail
+
+SITE_ROOT="/var/www/06-apps-neo-brutalist-home"
+METRICS_FILE="${SITE_ROOT}/metrics.json"
+LOG_FILE="/var/log/06-apps-neo-brutalist-home/metrics.log"
+
+log() {
+    echo "$(date -Iseconds) $1" >> "${LOG_FILE}"
+}
+
+log "Starting metrics collection"
+
+# ── Uptime ──────────────────────────────────────────
+if command -v uptime &> /dev/null; then
+    uptime_formatted=$(uptime -p 2>/dev/null || echo "N/A")
+    uptime_seconds=$(awk '{print int($1)}' /proc/uptime)
+else
+    uptime_formatted="N/A"
+    uptime_seconds=0
+fi
+
+# ── RAM ─────────────────────────────────────────────
+mem_total_kb=$(awk '/^MemTotal:/ {print $2}' /proc/meminfo)
+mem_available_kb=$(awk '/^MemAvailable:/ {print $2}' /proc/meminfo)
+mem_used_kb=$((mem_total_kb - mem_available_kb))
+ram_total_gb=$(awk "BEGIN {printf \"%.2f\", ${mem_total_kb} / 1048576}")
+ram_used_gb=$(awk "BEGIN {printf \"%.2f\", ${mem_used_kb} / 1048576}")
+ram_percent=$(awk "BEGIN {printf \"%.1f\", ${mem_used_kb} * 100 / ${mem_total_kb}}")
+
+# ── Disk Usage ──────────────────────────────────────
+# Root filesystem (SSD)
+ssd_info=$(df -B1 / | tail -1)
+ssd_total=$(echo "$ssd_info" | awk '{print $2}')
+ssd_used=$(echo "$ssd_info" | awk '{print $3}')
+ssd_percent=$(echo "$ssd_info" | awk '{print $5}' | tr -d '%')
+ssd_total_gb=$(awk "BEGIN {printf \"%.2f\", ${ssd_total} / 1073741824}")
+ssd_used_gb=$(awk "BEGIN {printf \"%.2f\", ${ssd_used} / 1073741824}")
+
+# HDD1 at /mnt/HDD1
+hdd1_percent=0
+hdd1_used_gb="N/A"
+hdd1_total_gb="N/A"
+if [ -d "/mnt/HDD1" ] && mountpoint -q /mnt/HDD1 2>/dev/null; then
+    hdd1_info=$(df -B1 /mnt/HDD1 | tail -1)
+    hdd1_total=$(echo "$hdd1_info" | awk '{print $2}')
+    hdd1_used=$(echo "$hdd1_info" | awk '{print $3}')
+    hdd1_percent=$(echo "$hdd1_info" | awk '{print $5}' | tr -d '%')
+    hdd1_total_gb=$(awk "BEGIN {printf \"%.2f\", ${hdd1_total} / 1073741824}")
+    hdd1_used_gb=$(awk "BEGIN {printf \"%.2f\", ${hdd1_used} / 1073741824}")
+fi
+
+# ── CPU Load ────────────────────────────────────────
+read load_1m load_5m load_15m rest < /proc/loadavg
+
+# ── CPU Temperature ─────────────────────────────────
+cpu_temp="N/A"
+if [ -f /sys/class/thermal/thermal_zone0/temp ]; then
+    raw_temp=$(cat /sys/class/thermal/thermal_zone0/temp)
+    cpu_temp=$((raw_temp / 1000))
+elif [ -f /sys/class/hwmon/hwmon0/temp1_input ]; then
+    raw_temp=$(cat /sys/class/hwmon/hwmon0/temp1_input)
+    cpu_temp=$((raw_temp / 1000))
+fi
+
+# ── Subsite Count ───────────────────────────────────
+# Count unique Host() routers in Traefik config
+subsite_count=$(grep -c "Host(" /etc/traefik/routes.yml 2>/dev/null || echo "0")
+subsite_count=$((subsite_count / 2))
+
+# ── Write JSON ──────────────────────────────────────
+cat > "${METRICS_FILE}" << EOF
+{
+  "uptime": "${uptime_formatted}",
+  "uptime_seconds": ${uptime_seconds},
+  "ram_used_gb": "${ram_used_gb}",
+  "ram_total_gb": "${ram_total_gb}",
+  "ram_percent": ${ram_percent},
+  "hdd1_used_gb": "${hdd1_used_gb}",
+  "hdd1_total_gb": "${hdd1_total_gb}",
+  "hdd1_percent": ${hdd1_percent},
+  "ssd_used_gb": "${ssd_used_gb}",
+  "ssd_total_gb": "${ssd_total_gb}",
+  "ssd_percent": ${ssd_percent},
+  "cpu_load_1m": ${load_1m},
+  "cpu_load_5m": ${load_5m},
+  "cpu_load_15m": ${load_15m},
+  "cpu_temp_celsius": "${cpu_temp}",
+  "subsite_count": ${subsite_count},
+  "last_updated": "$(date -Iseconds)"
+}
+EOF
+
+log "Metrics collection complete"

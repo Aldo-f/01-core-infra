@@ -1,145 +1,127 @@
 # AGENTS.md — 01-core-infra
 
+Ansible-managed home-lab infrastructure for a Raspberry Pi 5. Every component is named `<NN>-<domain>-<name>`; the prefix decides both its domain and its deploy target.
+
 ## Quickstart
 
 ```bash
-curl -o- https://raw.githubusercontent.com/Aldo-f/01-core-infra/v0.0.1/install.sh | bash
+# bootstrap: clones/updates the repo at INSTALL_DIR, then runs scripts/deploy.sh
+curl -o- https://raw.githubusercontent.com/Aldo-f/01-core-infra/main/install.sh | bash
 ```
 
-This command clones the repository at the tagged version and runs the bootstrap installer.
+The playbook is idempotent — re-run after any template change:
 
 ```bash
 cd ansible && ansible-playbook -i inventories/local.yml playbooks/site.yml
 ```
 
-Idempotent. Run after any template change.
+**The active playbook is `ansible/playbooks/site.yml`.** Note `ansible/site.yml` also exists — it is a leftover bootstrap-only playbook (clones hermes-webui); don't treat it as the main one.
 
-| Script | Description |
-|------- | ----------- |
-| `install.sh` | Bootstrap installer — clones the repo at a tagged version (validates tag, shallow clone), then execs `scripts/deploy.sh`. |
-| `scripts/deploy.sh` | Full deployment logic (phases 0–4) extracted from the original `install.sh`. |
-
-Both scripts live at the repository root.
+| Script | What it does |
+|------- | ------------ |
+| `install.sh` | Hardcodes `INSTALL_DIR=/home/aldo/dev/01-core-infra`, `VERSION=main`. If already a git repo, `fetch --depth=1` and `reset --hard` to `origin/main` **only if local is not ahead** (skips update on unpushed commits), then `exec scripts/deploy.sh`. |
+| `scripts/deploy.sh` | Ensures `ansible` + `git` exist, then runs the playbook from `ansible/`. |
 
 ## Agent Rules
 
-- **Don't edit runtime dirs** — always edit `templates/infra/<component>/` and deploy.
-- **Don't hardcode paths** in cron templates — use `__HOME__`, `__USER__`, `__CORE_INFRA__`.
-- **Don't modify `/etc/sudoers.d/`** — managed by Ansible/systemd role.
-- **Don't add tools** without adding a sentry in `ansible/roles/tools/defaults/main.yml`.
-- **Don't expect `ollama signin`** to work on headless — use API key file.
+- **Don't edit runtime dirs** (`portainer/`, `cockpit/`, generated) — edit `templates/infra/<component>/` and deploy.
+- **Don't hardcode paths** in cron/systemd templates — use `__HOME__`, `__USER__`, `__CORE_INFRA__` placeholders.
+- **Don't modify `/etc/sudoers.d/`** — only `aldo` gets the grant (for the `app-deploy-systemd` helper). Agents must not touch sudoers.
+- **Don't add tools** without adding a sentry entry in `ansible/roles/tools/defaults/main.yml` (the `tools_sentries:` dict maps each tool to its `command` check — Ansible skips if the binary is already present).
+- **Don't expect `ollama signin`** to work headless — use `~/.config/ollama/api_key` (one key per line) or `OLLAMA_API_KEY`.
+- **Secrets live in Ansible Vault** — see [Vault](#vault--secrets).
+
+## Group Taxonomy
+
+The prefix determines both domain and deploy target.
+
+| # | Group | Deploy target | Status |
+|---|-------|---------------|--------|
+| 01 | core | inside this repo: `01-core-infra/<name>/` | active |
+| 02 | ai | own git repos (cloned via `repos.manifest.jsonc`; only `infra/` overwritten) or embedded | active |
+| 03 | monitoring | reserved | planned |
+| 04 | network | `~/dev/04-network-<name>/` | active |
+| 05 | media | in-repo templates → `templates/infra/05-*-*` | active |
+| 06 | apps | own git repos (via manifest) or role-deployed | active |
+| 07 | security | `~/dev/07-security-<name>/` | active |
+| 08 | storage | reserved | planned |
+
+### Components per group
+
+- **01-core** (ansible-copy, in-repo): `01-core-portainer`, `01-core-cockpit` → `~/dev/01-core-infra/{portainer,cockpit}/`.
+- **02-ai**: `02-ai-freellmapi` (manifest, branch `upstream`), `02-ai-llm-infra-sync` (manifest, branch `main`), `02-ai-mem0` (embedded, no container — config template `mem0.json.j2` → `~/.hermes/mem0.json`, Qdrant at `~/.hermes/mem0_qdrant`), `02-ai-script-google` (template, deploy target `templates/apps/scripts-google/`).
+- **04-network** (ansible-copy, sibling): `traefik`, `pihole`, `wireguard` → `~/dev/04-network-<name>/`.
+- **05-media** (now in-repo templates): `05-media-plex`, `05-media-qbittorrent`, `05-media-nextcloud` — each a `docker-compose.yml` under `templates/infra/`.
+- **06-apps**: `06-apps-thuis-v4`/`v5` (manifest, branches `v4/main`·`v5/main`), `06-apps-neo4ty-brutalist-home` (role-deployed, static site), `06-apps-scripts-google` (manifest). `templates/apps/toerekening/` exists but is **not** infra-managed.
+- **07-security**: `07-security-vaultwarden` → `~/dev/07-security-vaultwarden/`.
+
+**03 / 08 reserved** — create `templates/infra/<nn>-<domain>-<name>/` when adding the first component.
 
 ## Architecture
 
 ```
-~/dev/01-core-infra/
-  templates/infra/<component>/   ← EDIT HERE
-  ansible/                       ← Deployment automation
-  plex/ portainer/ qbittorrent/  ← NEVER TOUCH (generated)
+…/01-core-infra/
+  ansible/playbooks/site.yml        ← main playbook (roles, in order)
+  ansible/roles/                    ← base, tools, templates, containers,
+                                       systemd, cron, llamacpp,
+                                       neo-brutalist-home, hermes-skills,
+                                       freelapi-*, mesh_sync, containers
+  templates/infra/<component>/      ← EDIT HERE (source of truth for 01/02/05/07 + wires)
+  templates/systemd/, templates/cron/, templates/apps/
+  vaults/                           ← Ansible Vault secrets (master.key NEVER committed)
+  portainer/ cockpit/               ← generated runtime — never edit
 ```
 
-**Naming convention determines target:**
-- `01-core-*` → inside this repo (`01-core-infra/<name>/`)
-- `04-network-*` → sibling repo (`~/dev/04-network-<name>/`)
-- `02-*`, `06-*` → own git repos (cloned via manifest, only `infra/` subdir overwritten)
+### Ansible playbook
 
-### Repo Manifest
+`ansible/playbooks/site.yml` runs **roles in this order** (from `ansible/roles/`):
 
-`templates/infra/repos.manifest.jsonc` declares git-repo identity (remote + ref + infraSubdir). Deploy clones/pulls, checkout the ref, and copies only `infra/` — preserving `.git` and app source code.
+`base → tools → templates → systemd → llamacpp → neo-brutalist-home → cron → hermes-skills → mesh_sync → containers`
 
-### Ansible Structure
+- `site.yml` also declares `tools_sentries` (list of tool names) and runs a pre-task symlinking `~/.bun/bin/bun` → `/usr/local/bin/bun`.
+- `ansible/roles/containers/` is the **container deployment** role: it reads `container_services` from its `defaults/main.yml`, copies each `templates/infra/<name>/docker-compose.yml` to its runtime dir, and runs `docker compose up -d --remove-orphans`. It also syncs the Traefik `routes.yml`. **Currently the `container_services` default list only wires 01-core and 07-security — 05-media compose files are not yet in that list.**(i.e., they have compose templates but aren't auto-deployed).
+- `ansible/roles/templates/` currently only deploys `templates/infra/hermes/auth.json.j2` → Hermes home.
+- `ansible/roles/mesh_sync/` runs the credential-sync engine (back) at deploy end.
+- `ansible.cfg`: default `inventories/local.yml`, `roles_path` set, and `vault_password_file = vaults/master.key`.
 
-```
-ansible/
-  ansible.cfg                          ← roles_path, inventory default
-  inventories/local.yml                ← localhost connection
-  playbooks/site.yml                   ← main playbook (roles in order)
-  roles/
-    base/                              ← apt packages, system setup
-    tools/                             ← CLI tools (sentinel-based idempotency)
-    templates/                         ← deploy infra components
-    systemd/                           ← systemd units + sudoers
-    cron/                              ← cron jobs (backup + healthcheck)
-    mesh_sync/                         ← credential sync engine
-```
+## Secrets & Vault
 
-## Workflow
+- Encrypted secrets use **Ansible Vault**; the vault password file is `vaults/master.key` (declared in `ansible.cfg`).
+- **Never commit `vaults/master.key`** — it's git-ignored; read it once via `openssl rand -base64 32` and keep perms `600`.
+- To decrypt/encrypt: `ansible-vault decrypt|encrypt --vault-password-file vaults/master.key vaults/<file>.yml`.
+- Encrypted vault vars are loaded with `no_log: true` (see `roles/freellmapi/tasks/main.yml` for the pattern).
 
-**Role execution order** (defined in `site.yml`): base → tools → templates → systemd → cron → mesh_sync
+## Workflow / gotchas
 
-**Tool sentries** (`roles/tools/defaults/main.yml`): each tool has a `command` check — Ansible skips if present. When adding a new tool, add a sentry entry here first.
-
-### Ansible Status
-
-The current `site.yml` does not use the roles defined in `ansible/roles/` but instead runs inline tasks for deploying `06-apps-toerekening`. The goal is to refactor `site.yml` to use the roles in the order: base → tools → templates → systemd → cron → mesh_sync.
-
-## Registry
-
-| Component | Type | Template Source | Runtime Target | Deploy Method |
-|----------|------|----------------|----------------|---------------|
-| 01-core-portainer | pure-infra | `templates/infra/01-core-portainer/` | `~/dev/01-core-infra/portainer/` | ansible-copy |
-| 01-core-plex | pure-infra | `templates/infra/01-core-plex/` | `~/dev/01-core-infra/plex/` | ansible-copy |
-| 01-core-qbittorrent | pure-infra | `templates/infra/01-core-qbittorrent/` | `~/dev/01-core-infra/qbittorrent/` | ansible-copy |
-| 01-core-cockpit | pure-infra | `templates/infra/01-core-cockpit/` | `~/dev/01-core-infra/cockpit/` | ansible-copy |
-| 04-network-traefik | network | `templates/infra/04-network-traefik/` | `~/dev/04-network-traefik/` | ansible-copy |
-| 04-network-pihole | network | `templates/infra/04-network-pihole/` | `~/dev/04-network-pihole/` | ansible-copy |
-| 04-network-wireguard | network | `templates/infra/04-network-wireguard/` | `~/dev/04-network-wireguard/` | ansible-copy |
-| 02-ai-llm-infra-sync | git-repo | `templates/infra/02-ai-llm-infra-sync/` | `~/dev/02-ai-llm-infra-sync/` (git repo) | repo_manifest |
-| 06-apps-thuis-v4 | git-repo | `templates/infra/06-apps-thuis-v4/infra/` | `~/dev/06-apps-thuis-v4/infra/` (branch v4/main) | repo_manifest |
-| 06-apps-thuis-v5 | git-repo | `templates/infra/06-apps-thuis-v5/infra/` | `~/dev/06-apps-thuis-v5/infra/` (branch v5/main) | repo_manifest |
-| 02-ai-freellmapi | git-repo | `templates/infra/02-ai-freellmapi/infra/` | `~/dev/02-ai-freellmapi/infra/` (branch upstream) | repo_manifest |
+- **Tool sentries**: every CI tool is declared in `roles/tools/defaults/main.yml`. Adding a tool requires adding its sentry (its `command` check) there **first**.
+- **Path placeholders**: cron and systemd templates must use `__HOME__`, `__USER__`, `__CORE_INFRA__`. A `.husky/pre-commit` hook + CI reject hardcoded `/home/.../dev/01-core-infra` and missing placeholders.
+- **Docker**: Compose **v2 plugin** only (`docker compose`, never `docker-compose`). Components are single `docker-compose.yml` files.
+- **`__CORE_INFRA__/`** (the git-ignored top-level dir with its own `.git`) is a stale runtime copy — don't edit it.
 
 ## Reference
 
-### Ollama
+### Ollama (headless Pi)
+- `ollama signin` is interactive — does **not** work over SSH on a headless Pi.
+- Use `~/.config/ollama/api_key` (one per line, `#` comments) or `OLLAMA_API_KEY`; multiple keys become `OLLAMA_API_KEY_N`.
+- Model auto-selected by RAM (qwen3:4b 8GB, qwen3:8b 16GB, …); override with `OLLAMA_MODEL`.
 
-- `ollama signin` is interactive — **does not work** over SSH on headless Pi.
-- Use `~/.config/ollama/api_key` (one key per line, `#` comments) or `OLLAMA_API_KEY` env var.
-- Multiple keys loaded as `OLLAMA_API_KEY_1`, `OLLAMA_API_KEY_2`, etc.
-- Model selection automatic by RAM (qwen3:4b for 8GB, qwen3:8b for 16GB, qwen3.6 for 32GB+). Override with `OLLAMA_MODEL`.
+### Systemd units
+- Templates: `templates/systemd/*.service`; deployed via the passwordless-sudo helper `app-deploy-systemd`. Most are the legacy `ExecStart=/bin/true` stubs — configure before expecting them to run.
 
-### Docker
-
-Uses Compose **v2 plugin** (`docker compose`, not `docker-compose`). All components are single `docker-compose.yml` files.
-
-### Systemd Units
-
-- Templates: `templates/systemd/app-*.service`
-- Currently stubs (`ExecStart=/bin/true`) — **configure before expecting them to run**.
-- Deployed via passwordless-sudo helper (`/usr/local/bin/app-deploy-systemd`).
-- Only `aldo` gets the sudoers grant — agents should not modify sudoers files.
-
-### Cron Templates
-
-- Source: `templates/cron/01-core-infra.cron`
-- Uses **placeholders** (`__HOME__`, `__USER__`, `__CORE_INFRA__`) — never hardcode paths.
-- Pre-commit hook (`.husky/pre-commit`) rejects hardcoded `__CORE_INFRA__` paths.
-
-### Mesh Sync Engine
-
-`02-ai-llm-infra-sync` (TypeScript/Bun). Harvests credential pools, deduplicates per-provider, distributes back. Runs as `bun sync` at deploy end. Manual run: `bun install && bun sync` in `~/dev/02-ai-llm-infra-sync/`.
-
-### Backup & Healthcheck
-
+### Backup & Healthcheck (git-ignored `logs/`)
 | Script | What | Frequency | Retention |
 |---|---|---|---|
-| `backup.sh` | `tar.gz` of plex/config, portainer/data, pihole/etc-pihole | Daily 03:00 | 7 days |
+| `backup.sh` | tar.gz of plex/config, portainer/data, etc. | Daily 03:00 | 7 days |
 | `healthcheck.sh` | Docker containers + `app-*.service` units | Every 15 min | 14 days |
 
-Both write to `logs/` (git-ignored). Both skip dirs containing secrets.
+Both skip directories containing secrets.
 
-### CI (GitHub Actions)
+### CI (`ansible/.github/workflows/ci-verification.yml`)
+- yamllint on `ansible/` YAML; `ansible-playbook --syntax-check`
+- cron-template placeholder check; file-permission check;
+- role-structure check (`tasks/main.yml` + `defaults/main.yml` per role) and `tools_sentries` presence.
 
-- YAML lint (`yamllint`)
-- Ansible syntax check (`--syntax-check`)
-- Ansible lint (`ansible-lint`)
-- Template placeholder validation
-- Cron hardcoded path check
-- Role structure validation (all roles have `tasks/main.yml` + `defaults/main.yml`)
-
-### .gitignore
-
-- Runtime dirs (`portainer/`, `plex/`, `qbittorrent/`, `cockpit/`) — generated
-- `logs/`, `*.log`
-- `secrets.json`, `*.env`, `.env.*` (except `.env.template`)
-- `node_modules/`, `dist/`, `/04-network-*/`
+### .gitignore (high-signal entries)
+- `vaults/master.key`, `*.env`, `.env.*`, `auth.json` — secrets
+- runtime dirs + `.ansible/`, `.test-venv/`, `docs/theme/`
+- `__CORE_INFRA__/`, `precommit.log`

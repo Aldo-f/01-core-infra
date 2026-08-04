@@ -1,0 +1,59 @@
+---
+- name: Set repo facts for {{ item.name }}
+  ansible.builtin.set_fact:
+    repo_name: "{{ item.name }}"
+    repo_dir: "{{ dev_home }}/{{ item.name }}"
+    repo_infra_subdir: "{{ item.infraSubdir | default('.') }}"
+    repo_ref: >-
+      {{
+        item.checkout.ref if item.checkout.ref is defined else
+        (item.checkout.tag if item.checkout.tag is defined else
+         item.checkout.branch if item.checkout.branch is defined else 'main')
+      }}
+
+- name: Ensure repo directory exists for {{ repo_name }}
+  ansible.builtin.file:
+    path: "{{ repo_dir }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+
+- name: Clone repository {{ repo_name }} if not present
+  ansible.builtin.git:
+    repo: "{{ item.remote }}"
+    dest: "{{ repo_dir }}"
+    version: "{{ repo_ref }}"
+    accept_hostkey: yes
+    force: yes
+  register: git_result
+  until: git_result is succeeded
+  retries: 3
+  delay: 10
+  become: false
+
+- name: Ensure infra source directory exists for {{ repo_name }}
+  ansible.builtin.stat:
+    path: "{{ repo_dir }}/{{ repo_infra_subdir if repo_infra_subdir != '.' else '' }}"
+  register: infra_src_stat
+
+- name: Create infra destination directory for {{ repo_name }}
+  ansible.builtin.file:
+    path: "{{ template_dir }}/infra/{{ repo_name }}/infra"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+
+- name: Sync infra subdir from repo {{ repo_name }} to templates
+  ansible.builtin.synchronize:
+    src: "{{ repo_dir }}/{{ repo_infra_subdir if repo_infra_subdir != '.' else '' }}/"
+    dest: "{{ template_dir }}/infra/{{ repo_name }}/infra/"
+    rsync_opts:
+      - "--delete"
+    delete: yes
+    recursive: yes
+    perms: yes
+    times: yes
+  when: infra_src_stat.stat.isdir is defined and infra_src_stat.stat.isdir
+  become: false

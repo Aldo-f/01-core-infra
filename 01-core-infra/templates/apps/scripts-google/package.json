@@ -1,0 +1,13 @@
+{
+  "name": "script-google",
+  "version": "1.0.0",
+  "description": "Gmail reminder scripts: FollowUpReminder + LabelReminder",
+  "main": "index.js",
+  "scripts": {
+    "build": "echo \"Google Apps Script project - no build steps\"",
+    "test": "echo \"No tests available for Apps Script\""
+  },
+  "keywords": ["gmail", "reminder", "apps-script"],
+  "author": "",
+  "license": "MIT"
+}

@@ -1,0 +1,66 @@
+---
+# Deploy an hourly Nextcloud files:scan --all cron job with health-checked
+# script, logging, and logrotate. Idempotent: re-runs report changed=0.
+- name: Deploy Nextcloud sync script with health check
+  copy:
+    dest: "{{ sync_script_path }}"
+    owner: root
+    group: root
+    mode: "0755"
+    content: |
+      #!/usr/bin/env bash
+      # Deployed by Ansible (roles/nextcloud-sync) - do not edit manually.
+      # Logs to {{ sync_log_path }}
+
+      set -uo pipefail
+
+      LOG_FILE="{{ sync_log_path }}"
+      CONTAINER="{{ nextcloud_container }}"
+
+      log() {
+        echo "$(date '+%Y-%m-%d %H:%M:%S') [$1] $2" >> "$LOG_FILE"
+      }
+
+      # Health check: container must be running before scanning.
+      RUNNING=$(docker inspect --format '{{ '{{' }}.State.Running{{ '}}' }}' "$CONTAINER" 2>/dev/null)
+      if [ "$RUNNING" != "true" ]; then
+        log "WARN" "Container $CONTAINER is not running - skipping files:scan"
+        exit 0
+      fi
+
+      log "INFO" "Starting files:scan --all for $CONTAINER"
+      docker exec --user www-data "$CONTAINER" php occ files:scan --all
+      RC=$?
+
+      if [ "$RC" -eq 0 ]; then
+        log "INFO" "Finished files:scan --all (success)"
+      else
+        log "ERROR" "files:scan --all failed with exit code $RC"
+      fi
+      exit 0
+
+- name: Ensure logrotate config exists
+  copy:
+    dest: "{{ logrotate_path }}"
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      {{ sync_log_path }} {
+          weekly
+          rotate 4
+          compress
+          delaycompress
+          missingok
+          notifempty
+          create 0640 www-data adm
+      }
+
+- name: Install hourly cron job (root)
+  cron:
+    name: "{{ cron_job_name }}"
+    minute: "{{ cron_minute }}"
+    hour: "{{ cron_hour }}"
+    job: "{{ sync_script_path }}"
+    user: root
+    state: present

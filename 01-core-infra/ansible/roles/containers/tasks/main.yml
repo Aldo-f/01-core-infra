@@ -1,0 +1,54 @@
+---
+# Deploy containerized infrastructure components from templates/infra/<component>/
+# to their runtime targets and ensure Traefik routes are in sync.
+#
+# Runtime targets follow the group taxonomy:
+#   01-core-*      -> ~/dev/01-core-infra/<name>/
+#   07-security-*  -> ~/dev/07-security-<name>/
+
+- name: Load nextcloud vault credentials
+  include_vars:
+    file: "{{ lookup('env', 'HOME') }}/dev/01-core-infra/vaults/nextcloud-credentials.yml"
+  no_log: true
+
+- name: Ensure traefik_net Docker network exists
+  command: docker network create {{ traefik_network }}
+  become: true
+  ignore_errors: true
+  changed_when: false
+
+- name: Ensure runtime directories exist for container services
+  file:
+    path: "{{ item.runtime_dir }}"
+    state: directory
+    owner: aldo
+    group: aldo
+    mode: '0755'
+  loop: "{{ container_services }}"
+
+- name: Copy docker-compose template to runtime target
+  copy:
+    src: "{{ template_dir }}/infra/{{ item.name }}/docker-compose.yml"
+    dest: "{{ item.runtime_dir }}/docker-compose.yml"
+    owner: aldo
+    group: aldo
+    mode: '0644'
+  loop: "{{ container_services }}"
+
+- name: Pull images and start services via Docker Compose v2
+  command: docker compose up -d --remove-orphans
+  args:
+    chdir: "{{ item.runtime_dir }}"
+  become_user: aldo
+  become: true
+  loop: "{{ container_services }}"
+
+# ---- Traefik route sync ----
+- name: Sync Traefik routes.yml template to runtime
+  copy:
+    src: "{{ template_dir }}/infra/04-network-traefik/routes.yml"
+    dest: "{{ traefik_runtime_dir }}/routes.yml"
+    owner: aldo
+    group: aldo
+    mode: '0644'
+  notify: reload traefik

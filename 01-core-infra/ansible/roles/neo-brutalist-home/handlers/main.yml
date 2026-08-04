@@ -1,0 +1,14 @@
+---
+- name: reload traefik
+  command: docker restart traefik
+  become: true
+
+- name: restart metrics timer
+  systemd:
+    name: 06-apps-neo-brutalist-home-metrics.timer
+    state: restarted
+
+- name: restart homepage server
+  systemd:
+    name: 06-apps-neo-brutalist-home-server
+    state: restarted

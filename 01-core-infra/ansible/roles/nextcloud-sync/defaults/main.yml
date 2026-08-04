@@ -1,0 +1,10 @@
+---
+# defaults/main.yml
+# Nextcloud hourly file-scan cron role variables.
+nextcloud_container: nextcloud
+sync_script_path: /usr/local/bin/nextcloud-sync-all.sh
+sync_log_path: /var/log/nextcloud-sync.log
+logrotate_path: /etc/logrotate.d/nextcloud-sync
+cron_job_name: "Run Nextcloud file scan hourly"
+cron_minute: "0"
+cron_hour: "*"

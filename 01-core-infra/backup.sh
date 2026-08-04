@@ -38,6 +38,21 @@ for entry in "${SOURCES[@]}"; do
   fi
 done
 
+# --- Nextcloud specific config (excluded from generic loop due to .env check) ---
+NC_DIR="$HOME/dev/06-apps-nextcloud"
+if [ -f "$NC_DIR/.env" ]; then
+    out="$BACKUP_DIR/${STAMP}-nextcloud-env.tar.gz"
+    tar -czf "$out" -C "$NC_DIR" ".env" 2>/dev/null \
+        && log "Backup OK: $out" \
+        || log "WARN: backup nextcloud-env failed"
+fi
+if [ -f "$NC_DIR/docker-compose.yml" ]; then
+    out="$BACKUP_DIR/${STAMP}-nextcloud-compose.tar.gz"
+    tar -czf "$out" -C "$NC_DIR" "docker-compose.yml" 2>/dev/null \
+        && log "Backup OK: $out" \
+        || log "WARN: backup nextcloud-compose failed"
+fi
+
 # Rotatie: oudere dan RETENTION_DAYS verwijderen
 find "$BACKUP_DIR" -name '*.tar.gz' -mtime +"$RETENTION_DAYS" -delete 2>/dev/null
 log "Rotatie: backups ouder dan $RETENTION_DAYS dagen verwijderd"

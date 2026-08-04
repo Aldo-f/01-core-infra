@@ -5,29 +5,35 @@
   // infraSubdir: waar de infra-bestanden in de repo terechtkomen (repo-identiteit
   // (.git) blijft onaangeroerd).
   "repos": [
-    {
-      "name": "02-ai-llm-infra-sync",
-      "remote": "git@github.com:Aldo-f/02-ai-llm-infra-sync.git",
-      "checkout": { "ref": "main", "type": "branch" },
-      "infraSubdir": "."            // hele repo IS de infra
-    },
-    {
-      "name": "06-apps-thuis-v4",
-      "remote": "git@github.com:Aldo-f/thuis.git",
-      "checkout": { "ref": "v4/main", "type": "branch" },
-      "infraSubdir": "infra"
-    },
-    {
-      "name": "06-apps-thuis-v5",
-      "remote": "git@github.com:Aldo-f/thuis.git",
-      "checkout": { "ref": "v5/main", "type": "branch" },
-      "infraSubdir": "infra"
-    },
-    {
-      "name": "02-ai-freellmapi",
-      "remote": "git@github.com:Aldo-f/freellmapi.git",
-      "checkout": { "ref": "upstream", "type": "branch" },
-      "infraSubdir": "infra"
-    }
-  ]
+        {
+          "name": "02-ai-llm-infra-sync",
+          "remote": "git@github.com:Aldo-f/02-ai-llm-infra-sync.git",
+          "checkout": { "ref": "main", "type": "branch" },
+          "infraSubdir": "."            // hele repo IS de infra
+        },
+        {
+          "name": "06-apps-thuis-v4",
+          "remote": "git@github.com:Aldo-f/thuis.git",
+          "checkout": { "ref": "v4/main", "type": "branch" },
+          "infraSubdir": "infra"
+        },
+        {
+          "name": "06-apps-thuis-v5",
+          "remote": "git@github.com:Aldo-f/thuis.git",
+          "checkout": { "ref": "v5/main", "type": "branch" },
+          "infraSubdir": "infra"
+        },
+        {
+          "name": "02-ai-freellmapi",
+          "remote": "git@github.com:Aldo-f/freellmapi.git",
+          "checkout": { "ref": "upstream", "type": "branch" },
+          "infraSubdir": "infra"
+        },
+        {
+          "name": "06-apps-scripts-google",
+          "remote": "git@github.com:Aldo-f/script.google.git",
+          "checkout": { "ref": "main", "type": "branch" },
+          "infraSubdir": "."
+        }
+      ]
 }

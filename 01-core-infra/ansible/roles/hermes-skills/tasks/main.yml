@@ -1,0 +1,61 @@
+---
+- name: Ensure dev directory exists
+  file:
+    path: "{{ dev_home }}/02-ai-hermes-skills"
+    state: directory
+    mode: '0755'
+
+- name: Check if skills repo already cloned
+  stat:
+    path: "{{ dev_home }}/02-ai-hermes-skills/.git"
+  register: skills_git_dir
+
+- name: Clone skills repo if missing
+  git:
+    repo: git@github.com:Aldo-f/hermes-skills.git
+    dest: "{{ dev_home }}/02-ai-hermes-skills"
+    version: main
+    force: yes
+  when: not skills_git_dir.stat.exists
+
+- name: Ensure skills repo has remote origin set (idempotent)
+  git:
+    repo: git@github.com:Aldo-f/hermes-skills.git
+    dest: "{{ dev_home }}/02-ai-hermes-skills"
+    update: no
+  when: skills_git_dir.stat.exists
+
+- name: Set git user name for repo (if not already set)
+  git_config:
+    name: user.name
+    value: aldo
+    scope: local
+    repo: "{{ dev_home }}/02-ai-hermes-skills"
+
+- name: Set git user email for repo (if not already set)
+  git_config:
+    name: user.email
+    value: "5683799+Aldo-f@users.noreply.github.com"
+    scope: local
+    repo: "{{ dev_home }}/02-ai-hermes-skills"
+
+- name: Pull latest changes to keep up-to-date
+  git:
+    repo: git@github.com:Aldo-f/hermes-skills.git
+    dest: "{{ dev_home }}/02-ai-hermes-skills"
+    version: main
+    update: yes
+
+- name: Ensure ~/.hermes/skills is a symlink to the repo
+  file:
+    src: "{{ dev_home }}/02-ai-hermes-skills"
+    dest: "{{ home_dir }}/.hermes/skills"
+    state: link
+    force: yes
+
+- name: Ensure skills directory is owned by user
+  file:
+    path: "{{ dev_home }}/02-ai-hermes-skills"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    recurse: yes

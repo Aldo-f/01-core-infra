@@ -1,0 +1,3 @@
+---
+# defaults file for manifest-repos
+manifest_path: "/home/aldo/dev/01-core-infra/templates/infra/repos.manifest.jsonc"

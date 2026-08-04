@@ -55,14 +55,26 @@
     file: "{{ lookup('env', 'HOME') }}/dev/01-core-infra/vaults/freellmapi-credentials.yml"
   no_log: true
 
-- name: Render freellmapi .env from vault
-  template:
-    src: "{{ template_dir }}/infra/02-ai-freellmapi/infra/.env.j2"
-    dest: /home/aldo/dev/02-ai-freellm/.env
+- name: Render freellmapi .env from vault (idempotent)
+  copy:
+    dest: "{{ freellmapi_runtime_dir }}/.env"
+    content: |
+      # FreeLLMAPI environment — rendered by Ansible from vault
+      # (01-core-infra/vaults/freellmapi-credentials.yml). DO NOT edit manually:
+      #
+      # Any Ansible run re-renders this file. If the source vault entry changes,
+      # the file will be rewritten; otherwise it stays unchanged.
+      ENCRYPTION_KEY={{ vault_freellmapi_encryption_key }}
+      PORT={{ vault_freellmapi_port }}
+      HOST_BIND={{ vault_freellmapi_host_bind }}
+      REQUEST_ANALYTICS_RETENTION_DAYS={{ vault_freellmapi_analytics_retention_days }}
+      REQUEST_ANALYTICS_MAX_ROWS={{ vault_freellmapi_analytics_max_rows }}
     owner: aldo
     group: aldo
     mode: "0600"
   no_log: true
+  register: env_file_render
+  changed_when: env_file_render.diff is defined or (env_file_render.checksum|default('') != '')
 
 - name: Deploy freellmapi service
   shell: |

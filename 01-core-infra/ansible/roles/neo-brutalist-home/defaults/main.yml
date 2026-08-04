@@ -1,0 +1,9 @@
+---
+# Default variables for neo-brutalist-home role
+site_name: "06-apps-neo-brutalist-home"
+site_domain: "aldof.duckdns.org"
+site_root: "/var/www/06-apps-neo-brutalist-home"
+metrics_script: "/opt/06-apps-neo-brutalist-home/collect-metrics.sh"
+log_dir: "/var/log/06-apps-neo-brutalist-home"
+traefik_routes_file: "/home/aldo/dev/04-network-traefik/routes.yml"
+nginx_port: 8081

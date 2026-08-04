@@ -1,0 +1,20 @@
+version: "3.9"
+
+services:
+  script-google-apps-script:
+    image: alpine:latest
+    container_name: script-google-apps-script
+    command: ["sh", "-c", "echo \"Google Apps Script deployment - handled via Google Cloud APIs\" && sleep infinity"]
+    environment:
+      - GOOGLE_APPS_SCRIPT_PROJECT_ID=script-google
+      - GOOGLE_APPS_SCRIPT_DEVELOPER_EMAIL=aldo@aldof.duckdns.org
+      - NODE_ENV=production
+    networks:
+      - traefik_net
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"  # Not directly accessible via web
+
+networks:
+  traefik_net:
+    external: true

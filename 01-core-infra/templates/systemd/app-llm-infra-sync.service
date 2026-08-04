@@ -16,11 +16,11 @@ Environment=PORT=3003
 StandardOutput=journal
 StandardError=journal
 
-# Security hardening
+# Security hardening (balanced: service needs read+write in $HOME)
 NoNewPrivileges=true
 PrivateTmp=true
-ProtectSystem=strict
-ProtectHome=true
+ProtectSystem=full
+# NOTE: ProtectHome must NOT be enabled — ExecStart binary lives under /home/aldo/.bun
 
 # Resource limits
 LimitNOFILE=65536

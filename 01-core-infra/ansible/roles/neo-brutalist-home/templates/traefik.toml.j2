@@ -1,0 +1,24 @@
+http:
+  routers:
+    # ── Homepage ─────────────────────────────────
+    homepage-http:
+      rule: "Host(`aldof.duckdns.org`)"
+      entryPoints:
+        - web
+      middlewares:
+        - https-redirect
+      service: homepage
+
+    homepage:
+      rule: "Host(`aldof.duckdns.org`)"
+      entryPoints:
+        - websecure
+      service: homepage
+      tls:
+        certResolver: myresolver
+
+  services:
+    homepage:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.0.5:8081"

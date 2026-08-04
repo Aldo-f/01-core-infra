@@ -1,4 +1,8 @@
 services:
   cockpit:
     image: quay.io/cockpit/ws:latest
+    container_name: cockpit
+    restart: unless-stopped
     network_mode: host
+    volumes:
+      - /run:/run

@@ -73,6 +73,13 @@
   become: true
   when: "'pnpm' in tools_sentries"
 
+- name: Install locate (plocate)
+  apt:
+    name: locate
+    state: present
+  become: true
+  when: "'locate' in tools_sentries and ansible_facts.packages['locate'] is not defined"
+
 - name: Install spec‑kit (clone repository)
   git:
     repo: https://github.com/github/spec-kit.git
@@ -142,3 +149,9 @@
   args:
     creates: ~/.config/opencode/.omo-installed-by-01-core-infra
   when: " 'opencode' in tools_sentries and 'bun' in tools_sentries"
+
+- name: Install toot (Mastodon CLI)
+  pip:
+    name: toot
+    state: present
+  when: "'toot' in tools_sentries"

@@ -1,0 +1,23 @@
+services:
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    restart: unless-stopped
+    environment:
+      - DOMAIN=https://vaultwarden.aldof.duckdns.org
+      - WEBSOCKET_ENABLED=true
+      - SIGNUPS_ALLOWED=false
+    expose:
+      - "80"
+      - "3012"
+    volumes:
+      - vaultwarden_data:/data
+    networks:
+      - traefik_net
+
+networks:
+  traefik_net:
+    external: true
+
+volumes:
+  vaultwarden_data:
